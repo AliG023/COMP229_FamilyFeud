@@ -17,13 +17,24 @@ export default function PlayerJoin() {
 
       <PageSection title="Access Code" description="Codes refresh for every new lobby to prevent random joins.">
         <form className="form-stack">
-          <label>
+          <label htmlFor="join-access-code">
             Access Code
-            <input type="text" inputMode="numeric" placeholder="842159" />
+            <input
+              id="join-access-code"
+              name="accessCode"
+              type="text"
+              inputMode="numeric"
+              placeholder="842159"
+            />
           </label>
-          <label>
+          <label htmlFor="join-display-name">
             Display Name
-            <input type="text" placeholder="Team Captain" />
+            <input
+              id="join-display-name"
+              name="displayName"
+              type="text"
+              placeholder="Team Captain"
+            />
           </label>
           <button type="submit">Request Entry</button>
         </form>
