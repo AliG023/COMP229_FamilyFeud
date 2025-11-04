@@ -120,6 +120,7 @@ export default function SignUp() {
               <option value="producer">Producer</option>
             </select>
           </label>
+          {/* TODO (Backend Team): confirm whether producer should map to admin=true or a dedicated role collection. */}
           <div className="form-actions">
             <button type="submit" disabled={isSubmitting}>
               {isSubmitting ? 'Sending…' : 'Submit Request'}

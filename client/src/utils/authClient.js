@@ -33,6 +33,7 @@ export async function signIn(credentials) {
   });
 
   const payload = await parseResponse(response);
+  // TODO (Backend Team): set HttpOnly + Secure cookie flags when deploying behind HTTPS.
   return {
     message: payload?.message || 'Signed in successfully',
     token: payload?.token,

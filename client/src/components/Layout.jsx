@@ -63,6 +63,7 @@ export default function Layout() {
                 {signOutStatus === 'loading' ? 'Signing Out…' : 'Sign Out'}
               </button>
             </li>
+            {/* TODO (Frontend): replace temporary sign-out button with auth-aware user menu. */}
           </ul>
         </nav>
       </header>

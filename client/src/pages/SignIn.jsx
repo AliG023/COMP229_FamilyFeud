@@ -31,6 +31,7 @@ export default function SignIn() {
       setStatus({ state: 'success', message: result.message });
       setForm(INITIAL_FORM);
       // TODO (Backend Team): expose host role + permissions so we can route users appropriately post-auth.
+      // TODO (Frontend): persist authenticated user in shared state/store once backend role data is available.
     } catch (error) {
       setStatus({ state: 'error', message: error.message });
     }
