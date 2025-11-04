@@ -303,6 +303,20 @@ button:focus-visible {
   gap: 1rem;
 }
 
+.form-status {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.form-status--error {
+  color: #dc2626;
+}
+
+.form-status--success {
+  color: #0f766e;
+}
+
 .answer-list {
   display: grid;
   gap: 0.75rem;

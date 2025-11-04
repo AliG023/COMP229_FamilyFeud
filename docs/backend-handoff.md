@@ -25,7 +25,7 @@ The front-end skeleton now exposes host dashboards, question set management, ses
 ## Response Shapes
 - Question set resources should strip internal IDs from answers when possible to keep payload minimal.
 - Session responses should include `teams`, `scores`, `strikes`, `currentRound`, and `status` fields aligning with placeholders used in `Sessions.jsx`.
-- Auth responses must omit sensitive fields (`hashed_password`, `salt`).
+- Auth responses must omit sensitive fields (`hashed_password`, `salt`) and include role metadata so the front-end can route hosts/producers after sign-in.
 
 ## Validation Considerations
 - Enforce unique prompt/title combos per owner to avoid duplicates.

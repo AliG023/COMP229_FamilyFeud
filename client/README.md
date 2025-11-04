@@ -30,7 +30,7 @@ client/
 - Question set CRUD form and list are static shells with inline `TODO (Backend Team)` annotations.
 - Sessions view outlines live controls and utility actions awaiting API hooks.
 - Player join screen delivers access code form plus buzzer button ready for WebSocket wiring.
-- Auth views contain basic form fields with backend integration TODOs.
+- Auth views now call `/api/users/` and `/auth/signin`, sanitising responses until backend removes sensitive fields.
 
 ## Next Steps
 1. Replace placeholder data with fetch hooks once REST endpoints are available.
