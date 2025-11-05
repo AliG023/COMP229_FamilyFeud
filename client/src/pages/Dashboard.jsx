@@ -64,7 +64,13 @@ export default function Dashboard() {
               <span>{session.teams.map((team) => team.name).join(' vs ')}</span>
               <span>{new Date(session.updatedAt).toLocaleTimeString()}</span>
               <span>
-                <button type="button" className="link-button">Open</button>
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => navigate('/under-construction')}
+                >
+                  Open
+                </button>
               </span>
             </div>
           ))}
