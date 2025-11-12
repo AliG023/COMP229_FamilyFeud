@@ -5,6 +5,6 @@ import authMiddleware from '../middlewares/auth.middleware.js';
 const router = express.Router();
 
 // Add middleware once authentication and user is finished
-router.get('/api/ai', aiController.getAiResponse);
+router.post('/api/ai', aiController.getAiResponse);
 
 export default router;
