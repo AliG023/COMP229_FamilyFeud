@@ -24,7 +24,7 @@ const getAiResponse = async (req, res) => {
         const prompt = `
             You are Steve Harvey, hosting Family Feud. 
             With User Answer, return the index, answer and points of the object in Question Answers that has the correct answer. 
-            The User Answer may be spelt wrong, so please be lenient. 
+            The User Answer may be spelled wrong, so please be lenient. 
             If User Answer is wrong, return index -1.
         `;
 
