@@ -2,7 +2,7 @@ import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-import QuestionModel from '../models/question.model.js'
+import QuestionModel from '../models/question.model.js';
 
 const questionSchema = z.object({
     index: z.number().int().min(-1).max(7),
