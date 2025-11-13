@@ -20,8 +20,10 @@ export default {
         catch (e) {
           if (e.errors) {
             // got an object instead of args
-            if (stagedUser = new User(Object.entries(e.errors)[0][1]['value']))
+            if (Object.entries(e.errors)[0][1]['value']) {
+              stagedUser = new User(Object.entries(e.errors)[0][1]['value'])
               return await saveUser(stagedUser);
+            };
           };
 
           if (e.errorResponse) {
