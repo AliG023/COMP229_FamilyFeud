@@ -1,27 +1,63 @@
 /**
  * @file useGameBoardEngine.js
  * @author Alex Kachur
- * @since 2025-11-12
- * @purpose Encapsulates Family Feud board state transitions, timers, and handlers for reuse.
+ * @since 2025-11-13
+ * @purpose Encapsulates Family Feud board state transitions, timers, backend calls, and handlers for reuse.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ANSWERING_PHASES,
   PLAYER_PLACEHOLDERS,
-  ROUND_DATA,
+  ROUND_THEMES,
+  SLOT_COUNT,
   TIMER_CONFIG,
   TIMER_LABELS,
 } from './gameBoardConstants.js';
-import { buildAnswerSlots, getOpponentIndex, isSpaceKey, normalize } from './gameBoardUtils.js';
+import { getOpponentIndex, isSpaceKey, normalize } from './gameBoardUtils.js';
+import { ai, questions } from '../utils/api.js';
+
+const TOTAL_ROUNDS = ROUND_THEMES.length || 1;
+
+// Pre-allocates placeholder slots so the board art can render before answers land.
+const buildEmptySlots = (size) => {
+  const clampedSize = Math.max(0, Math.min(size ?? SLOT_COUNT, SLOT_COUNT));
+  return Array.from({ length: SLOT_COUNT }, (_, index) =>
+    index < clampedSize
+      ? { rank: index + 1, answer: null, points: null }
+      : null,
+  );
+};
+
+// Re-arm timer if a request fails so the host flow keeps moving.
+const restartTimerForPhase = (phase, startTimer, handleMissRef, finalizeRound, controlPlayer) => {
+  if (phase === 'playing') {
+    startTimer('playGuess', TIMER_CONFIG.playGuess, () => handleMissRef.current?.('timeout'));
+  } else if (phase === 'steal') {
+    startTimer('steal', TIMER_CONFIG.steal, () => finalizeRound(controlPlayer ?? 0, 'Steal attempt expired.'));
+  } else if (phase === 'faceoffAnswer' || phase === 'faceoffChallenger') {
+    startTimer('faceoffAnswer', TIMER_CONFIG.faceoffAnswer, () => handleMissRef.current?.('timeout'));
+  }
+};
+
+// Normalizes API responses and surfaces backend error messages.
+const parseResponse = async (response) => {
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data?.message || 'Request failed');
+  }
+  return data;
+};
 
 export default function useGameBoardEngine() {
+  // Round scaffolding & revealed answers are hydrated as soon as the backend responds.
   const [roundIndex, setRoundIndex] = useState(0);
-  const currentRound = ROUND_DATA[roundIndex] ?? ROUND_DATA[0];
-  const gridAnswers = useMemo(() => buildAnswerSlots(currentRound), [currentRound]);
+  const [currentRound, setCurrentRound] = useState(null);
+  const [gridAnswers, setGridAnswers] = useState(() => buildEmptySlots(SLOT_COUNT));
   const [revealedAnswers, setRevealedAnswers] = useState(() =>
-    gridAnswers.map((answer) => (answer ? false : 'empty')),
+    Array(SLOT_COUNT).fill('empty'),
   );
-  const [phase, setPhase] = useState('intro');
+  const [phase, setPhase] = useState('loading');
+  const [roundStatus, setRoundStatus] = useState({ state: 'loading', message: 'Loading question…' });
   const [activePlayerIndex, setActivePlayerIndex] = useState(null);
   const [controlPlayer, setControlPlayer] = useState(null);
   const [buzzWinner, setBuzzWinner] = useState(null);
@@ -32,6 +68,7 @@ export default function useGameBoardEngine() {
   const [guess, setGuess] = useState('');
   const [feedback, setFeedback] = useState('');
   const [roundResult, setRoundResult] = useState(null);
+  const [isCheckingAnswer, setIsCheckingAnswer] = useState(false);
   const inputRef = useRef(null);
   const faceoffCycleRef = useRef(0);
   const handleMissRef = useRef(() => {});
@@ -39,6 +76,7 @@ export default function useGameBoardEngine() {
   const timerDeadlineRef = useRef(null);
   const timerCallbackRef = useRef(null);
 
+  // Shared countdown runner keeps the classic Family Feud pacing.
   const stopTimer = useCallback(() => {
     timerDeadlineRef.current = null;
     timerCallbackRef.current = null;
@@ -53,6 +91,7 @@ export default function useGameBoardEngine() {
     setTimerState({ mode, remainingMs: durationMs + graceMs });
   }, []);
 
+  // Interval loop updates the timer HUD without piling on re-renders.
   useEffect(() => {
     if (!timerState.mode || !timerDeadlineRef.current) return undefined;
 
@@ -72,7 +111,67 @@ export default function useGameBoardEngine() {
     return () => clearInterval(id);
   }, [timerState.mode, stopTimer]);
 
+  // Resets all per-round state while keeping the cumulative scoreboard intact.
+  const resetRoundState = useCallback(
+    (slots) => {
+      setGridAnswers(slots);
+      setRevealedAnswers(slots.map((slot) => (slot ? false : 'empty')));
+      setRoundPot(0);
+      setStrikes(0);
+      setControlPlayer(null);
+      setBuzzWinner(null);
+      setFaceoffLeader(null);
+      setRoundResult(null);
+      setFeedback('');
+      setGuess('');
+      setPhase('intro');
+      stopTimer();
+    },
+    [stopTimer],
+  );
+
+  // Pulls a random question from the backend and seeds the board placeholders.
+  const loadRound = useCallback(async () => {
+    setRoundStatus({ state: 'loading', message: 'Loading question…' });
+    setPhase('loading');
+    try {
+      const response = await questions.getRandom();
+      const payload = await parseResponse(response);
+      const size = Math.max(0, Math.min(payload?.size ?? SLOT_COUNT, SLOT_COUNT));
+      const slots = buildEmptySlots(size);
+      const theme = ROUND_THEMES[roundIndex % TOTAL_ROUNDS] ?? ROUND_THEMES[0] ?? {};
+      setCurrentRound({
+        questionId: payload?._id,
+        question: payload?.question ?? 'Question unavailable',
+        size,
+        overlayAsset: theme.overlayAsset ?? '/Round_One.png',
+        label: theme.label ?? `Round ${roundIndex + 1}`,
+        multiplier: theme.multiplier ?? 1,
+      });
+      resetRoundState(slots);
+      setRoundStatus({ state: 'idle', message: '' });
+    } catch (error) {
+      setRoundStatus({ state: 'error', message: error.message || 'Unable to load question' });
+      setFeedback(error.message || 'Unable to load question.');
+      setPhase('error');
+    }
+  }, [resetRoundState, roundIndex]);
+
+  // Initial mount + round changes should hydrate a fresh question immediately.
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      if (!isMounted) return;
+      await loadRound();
+    })();
+    return () => {
+      isMounted = false;
+    };
+  }, [loadRound]);
+
+  // Faceoff entry point: clears voices, spins up the buzzer timer, and alternates teams.
   const enterFaceoffBuzz = useCallback(() => {
+    if (roundStatus.state !== 'idle') return;
     stopTimer();
     setPhase('faceoffBuzz');
     setGuess('');
@@ -85,21 +184,7 @@ export default function useGameBoardEngine() {
       setFeedback('No buzz detected. Host repeats the question.');
       enterFaceoffBuzz();
     });
-  }, [startTimer, stopTimer]);
-
-  useEffect(() => {
-    setRevealedAnswers(gridAnswers.map((answer) => (answer ? false : 'empty')));
-    setRoundPot(0);
-    setStrikes(0);
-    setControlPlayer(null);
-    setBuzzWinner(null);
-    setFaceoffLeader(null);
-    setRoundResult(null);
-    setFeedback('');
-    setGuess('');
-    setPhase('intro');
-    stopTimer();
-  }, [gridAnswers, stopTimer]);
+  }, [roundStatus.state, startTimer, stopTimer]);
 
   useEffect(() => {
     if (phase !== 'intro') return undefined;
@@ -107,6 +192,7 @@ export default function useGameBoardEngine() {
     return () => clearTimeout(introTimer);
   }, [phase]);
 
+  // Awards the accumulated pot and advances to summary/game complete states.
   const finalizeRound = useCallback(
     (winnerIndex, note) => {
       stopTimer();
@@ -118,12 +204,13 @@ export default function useGameBoardEngine() {
         });
       }
       setRoundResult({ winnerIndex, points: roundPot, note });
-      setPhase(roundIndex < ROUND_DATA.length - 1 ? 'roundSummary' : 'gameComplete');
+      setPhase(roundIndex < TOTAL_ROUNDS - 1 ? 'roundSummary' : 'gameComplete');
       setFeedback(note ?? '');
     },
     [roundIndex, roundPot, stopTimer],
   );
 
+  // Central strike/timeout handler so every phase reacts consistently to misses.
   const handleMiss = useCallback(
     (reason) => {
       stopTimer();
@@ -203,9 +290,10 @@ export default function useGameBoardEngine() {
     [stopTimer],
   );
 
+  // Applies a successful reveal to the grid and routes faceoff/steal logic.
   const handleCorrectAnswer = useCallback(
-    (matchIndex) => {
-      const slot = gridAnswers[matchIndex];
+    (matchIndex, slotOverride) => {
+      const slot = slotOverride ?? gridAnswers[matchIndex];
       if (!slot) {
         handleMiss('invalid');
         return;
@@ -220,7 +308,8 @@ export default function useGameBoardEngine() {
         updated[matchIndex] = true;
         return updated;
       });
-      setRoundPot((value) => value + slot.points * currentRound.multiplier);
+      const slotPoints = (slot.points ?? 0) * (currentRound?.multiplier ?? 1);
+      setRoundPot((value) => value + slotPoints);
 
       if (phase === 'faceoffAnswer') {
         if (slot.rank === 1) {
@@ -271,7 +360,7 @@ export default function useGameBoardEngine() {
     [
       activePlayerIndex,
       controlPlayer,
-      currentRound.multiplier,
+      currentRound?.multiplier,
       faceoffLeader,
       finalizeFaceoffControl,
       finalizeRound,
@@ -304,29 +393,71 @@ export default function useGameBoardEngine() {
     [beginPlaying, controlPlayer],
   );
 
+  // Sends the contestant guess to the AI endpoint, then hydrates the returned slot.
   const handleGuessSubmit = useCallback(
-    (event) => {
+    async (event) => {
       event.preventDefault();
       if (!ANSWERING_PHASES.has(phase)) return;
+      if (roundStatus.state !== 'idle' || isCheckingAnswer) return;
       const cleaned = normalize(guess);
-      if (!cleaned) return;
+      if (!cleaned || !currentRound?.questionId) return;
       stopTimer();
-      const matchIndex = gridAnswers.findIndex(
-        (slot, index) => slot && revealedAnswers[index] === false && slot.matchers.includes(cleaned),
-      );
-      if (matchIndex === -1) {
-        setFeedback('No match. That counts as a strike.');
-        handleMiss('no-match');
-      } else {
-        handleCorrectAnswer(matchIndex);
+      setIsCheckingAnswer(true);
+      try {
+        const response = await ai.submitAnswer(currentRound.questionId, cleaned);
+        const payload = await parseResponse(response);
+        const slotIndex = typeof payload?.index === 'number' ? payload.index : -1;
+        if (slotIndex < 0 || slotIndex >= (currentRound?.size ?? SLOT_COUNT)) {
+          setFeedback('No match. That counts as a strike.');
+          handleMiss('no-match');
+          setGuess('');
+          return;
+        }
+        if (revealedAnswers[slotIndex] === true) {
+          setFeedback('That answer is already revealed.');
+          handleMiss('duplicate');
+          setGuess('');
+          return;
+        }
+        const slotData = {
+          rank: slotIndex + 1,
+          answer: payload?.answer ?? 'Revealed answer',
+          points: Number(payload?.points) || 0,
+        };
+        setGridAnswers((prev) => {
+          const updated = [...prev];
+          updated[slotIndex] = { ...(updated[slotIndex] ?? { rank: slotIndex + 1 }), ...slotData };
+          return updated;
+        });
+        handleCorrectAnswer(slotIndex, slotData);
+      } catch (error) {
+        setFeedback(error.message || 'Unable to verify the answer. Try again.');
+        restartTimerForPhase(phase, startTimer, handleMissRef, finalizeRound, controlPlayer);
+      } finally {
+        setIsCheckingAnswer(false);
+        setGuess('');
       }
-      setGuess('');
     },
-    [gridAnswers, guess, handleCorrectAnswer, handleMiss, phase, revealedAnswers, stopTimer],
+    [
+      controlPlayer,
+      currentRound,
+      finalizeRound,
+      guess,
+      handleCorrectAnswer,
+      handleMiss,
+      isCheckingAnswer,
+      phase,
+      revealedAnswers,
+      roundStatus.state,
+      startTimer,
+      stopTimer,
+    ],
   );
 
+  // Simulates a buzz-in event; the alternating index keeps the prototype fair without sockets.
   const handleBuzz = useCallback(
     (force = false) => {
+      if (roundStatus.state !== 'idle') return;
       if (!force && phase !== 'faceoffBuzz') return;
       const playerIndex = faceoffCycleRef.current % PLAYER_PLACEHOLDERS.length;
       faceoffCycleRef.current += 1;
@@ -338,7 +469,7 @@ export default function useGameBoardEngine() {
       setGuess('');
       startTimer('faceoffAnswer', TIMER_CONFIG.faceoffAnswer, () => handleMissRef.current?.('timeout'));
     },
-    [phase, startTimer, stopTimer],
+    [phase, roundStatus.state, startTimer, stopTimer],
   );
 
   useEffect(() => {
@@ -363,10 +494,12 @@ export default function useGameBoardEngine() {
     }
   }, [phase]);
 
+  // Moves to the next question (or resets to round one) and triggers another fetch.
   const advanceRound = useCallback(() => {
-    // TODO (Gameplay): Swap placeholder round cycling for API-driven question rotation when backend is ready.
+    setRoundStatus({ state: 'loading', message: 'Loading question…' });
+    setPhase('loading');
     setRoundIndex((value) => {
-      if (value < ROUND_DATA.length - 1) {
+      if (value < TOTAL_ROUNDS - 1) {
         return value + 1;
       }
       setScores(Array(PLAYER_PLACEHOLDERS.length).fill(0));
@@ -387,6 +520,8 @@ export default function useGameBoardEngine() {
       playOrPass: 'Choose to play the board or pass control.',
       steal: 'One guess to steal the board.',
       playing: 'Guess one answer at a time. Three strikes ends the turn.',
+      loading: roundStatus.message || 'Loading question…',
+      error: roundStatus.message || 'Unable to load question.',
     }[phase] ?? '';
   const activeInstruction =
     (activePlayerIndex === null && feedback) || instructionFallback || 'Ready for the next cue.';
@@ -400,7 +535,10 @@ export default function useGameBoardEngine() {
   const roundComplete = phase === 'roundSummary' || phase === 'gameComplete';
   const showPlayOrPassActions = phase === 'playOrPass';
   const showRoundAdvanceAction = roundComplete;
-  const roundOverlayAsset = currentRound.overlayAsset ?? '/Round_One.png';
+  const roundOverlayAsset =
+    currentRound?.overlayAsset ??
+    ROUND_THEMES[roundIndex % TOTAL_ROUNDS]?.overlayAsset ??
+    '/Round_One.png';
 
   return {
     // data
@@ -409,6 +547,7 @@ export default function useGameBoardEngine() {
     gridAnswers,
     revealedAnswers,
     phase,
+    roundStatus,
     activePlayerIndex,
     controlPlayer,
     roundPot,
@@ -425,6 +564,7 @@ export default function useGameBoardEngine() {
     showPlayOrPassActions,
     showRoundAdvanceAction,
     roundOverlayAsset,
+    isCheckingAnswer,
     // refs
     inputRef,
     // handlers
@@ -432,5 +572,6 @@ export default function useGameBoardEngine() {
     handleGuessSubmit,
     handleControlChoice,
     advanceRound,
+    reloadRound: loadRound,
   };
 }
