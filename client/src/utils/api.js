@@ -40,3 +40,16 @@ export const auth = {
 
   signout: () => apiFetch('/auth/signout', { method: 'GET' })
 };
+
+export const questions = {
+  getRandom: () => apiFetch('/question/', { method: 'GET' }),
+  getById: (id) => apiFetch(`/question/${id}`, { method: 'GET' })
+};
+
+export const ai = {
+  submitAnswer: (questionId, userAnswer) =>
+    apiFetch(`/ai/${questionId}`, {
+      method: 'POST',
+      body: JSON.stringify({ userAnswer })
+    })
+};
