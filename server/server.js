@@ -1,4 +1,6 @@
 import 'dotenv/config';
+
+import path from 'node:path';
 import express from "express";
 import config from "./config/config.js";
 import mongoose from "mongoose";
@@ -14,17 +16,16 @@ import apiRouter from './api-router.js';
 try {
   try {
     mongoose.connect(config.mongoUri);
-  }
-  catch (e) {
+  } catch (e) {
     console.error(`⚠️ Error connecting to: ${config.mongoUri}`);
   };
+
   console.log("✅ MongoDB connected successfully.");
 
   mongoose.connection.on('error', (e) => {
     throw new Error(`⚠️ Connection Error: ${e}`);
   });
-}
-catch (e) {
+} catch (e) {
   console.error('MongoDB connection error:', e);
 };
 
@@ -48,7 +49,7 @@ app
   })
 
   .get(/^(?!\/api).*/, rateLimit, (_, res) => {
-    res.sendFile(join(process.cwd(), 'client/dist', 'index.html'));
+    res.sendFile(path.join(process.cwd(), 'client/dist', 'index.html'));
   })
 
   .listen(config.port, (err) => {
