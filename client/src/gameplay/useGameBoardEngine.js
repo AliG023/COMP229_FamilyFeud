@@ -48,7 +48,8 @@ const parseResponse = async (response) => {
   return data;
 };
 
-export default function useGameBoardEngine() {
+export default function useGameBoardEngine(players = PLAYER_PLACEHOLDERS) {
+  const playerCount = players.length || PLAYER_PLACEHOLDERS.length;
   // Round scaffolding & revealed answers are hydrated as soon as the backend responds.
   const [roundIndex, setRoundIndex] = useState(0);
   const [currentRound, setCurrentRound] = useState(null);
@@ -64,10 +65,16 @@ export default function useGameBoardEngine() {
   const [faceoffLeader, setFaceoffLeader] = useState(null);
   const [roundPot, setRoundPot] = useState(0);
   const [strikes, setStrikes] = useState(0);
-  const [scores, setScores] = useState(Array(PLAYER_PLACEHOLDERS.length).fill(0));
+  const [scores, setScores] = useState(() => Array(playerCount).fill(0));
   const [guess, setGuess] = useState('');
   const [feedback, setFeedback] = useState('');
   const [roundResult, setRoundResult] = useState(null);
+  useEffect(() => {
+    setScores((prev) => {
+      if (prev.length === playerCount) return prev;
+      return Array(playerCount).fill(0);
+    });
+  }, [playerCount]);
   const [isCheckingAnswer, setIsCheckingAnswer] = useState(false);
   const inputRef = useRef(null);
   const faceoffCycleRef = useRef(0);
@@ -127,7 +134,7 @@ export default function useGameBoardEngine() {
       setPhase('intro');
       stopTimer();
     },
-    [stopTimer],
+    [players, stopTimer],
   );
 
   // Pulls a random question from the backend and seeds the board placeholders.
@@ -215,7 +222,7 @@ export default function useGameBoardEngine() {
     (reason) => {
       stopTimer();
       if (phase === 'faceoffAnswer') {
-        const challenger = getOpponentIndex(buzzWinner ?? 0);
+        const challenger = getOpponentIndex(buzzWinner ?? 0, playerCount);
         setFeedback(
           reason === 'timeout'
             ? 'Time expired! Opponent gets a shot.'
@@ -239,7 +246,7 @@ export default function useGameBoardEngine() {
         setStrikes((prev) => {
           const next = prev + 1;
           if (next >= 3) {
-            const stealPlayer = getOpponentIndex(controlPlayer ?? 0);
+            const stealPlayer = getOpponentIndex(controlPlayer ?? 0, playerCount);
             setFeedback(
               reason === 'timeout'
                 ? 'Too slow—three strikes! Opponent can steal.'
@@ -271,7 +278,7 @@ export default function useGameBoardEngine() {
         finalizeRound(controlPlayer ?? 0, 'Defended the board.');
       }
     },
-    [buzzWinner, controlPlayer, enterFaceoffBuzz, finalizeRound, phase, startTimer, stopTimer],
+    [buzzWinner, controlPlayer, enterFaceoffBuzz, finalizeRound, phase, playerCount, startTimer, stopTimer],
   );
 
   handleMissRef.current = handleMiss;
@@ -282,8 +289,9 @@ export default function useGameBoardEngine() {
       setControlPlayer(playerIndex);
       setActivePlayerIndex(playerIndex);
       setPhase('playOrPass');
+      const label = players[playerIndex]?.label ?? PLAYER_PLACEHOLDERS[playerIndex]?.label ?? 'Team';
       setFeedback(
-        `${PLAYER_PLACEHOLDERS[playerIndex].label} controls the board${note ? ` – ${note}` : ''}. Choose play or pass.`,
+        `${label} controls the board${note ? ` – ${note}` : ''}. Choose play or pass.`,
       );
       setFaceoffLeader(null);
     },
@@ -316,11 +324,13 @@ export default function useGameBoardEngine() {
           finalizeFaceoffControl(activePlayerIndex ?? 0, 'Hit the #1 answer');
         } else {
           setFaceoffLeader({ playerIndex: activePlayerIndex ?? 0, rank: slot.rank });
-          const challenger = getOpponentIndex(activePlayerIndex ?? 0);
+          const challenger = getOpponentIndex(activePlayerIndex ?? 0, playerCount);
           setActivePlayerIndex(challenger);
           setPhase('faceoffChallenger');
+          const challengerLabel =
+            players[challenger]?.label ?? PLAYER_PLACEHOLDERS[challenger]?.label ?? 'Opponent';
           setFeedback(
-            `${PLAYER_PLACEHOLDERS[challenger].label} must beat rank #${slot.rank} to take control.`,
+            `${challengerLabel} must beat rank #${slot.rank} to take control.`,
           );
           startTimer('faceoffAnswer', TIMER_CONFIG.faceoffAnswer, () => handleMissRef.current?.('timeout'));
         }
@@ -354,7 +364,9 @@ export default function useGameBoardEngine() {
 
       if (phase === 'steal') {
         const stealer = activePlayerIndex ?? 0;
-        finalizeRound(stealer, `${PLAYER_PLACEHOLDERS[stealer].label} stole the round!`);
+        const stealerLabel =
+          players[stealer]?.label ?? PLAYER_PLACEHOLDERS[stealer]?.label ?? 'Challenger';
+        finalizeRound(stealer, `${stealerLabel} stole the round!`);
       }
     },
     [
@@ -367,6 +379,8 @@ export default function useGameBoardEngine() {
       gridAnswers,
       handleMiss,
       phase,
+      playerCount,
+      players,
       revealedAnswers,
       startTimer,
     ],
@@ -377,20 +391,21 @@ export default function useGameBoardEngine() {
       stopTimer();
       setPhase('playing');
       setActivePlayerIndex(playerIndex);
-      setFeedback(`${PLAYER_PLACEHOLDERS[playerIndex].label} is playing the board.`);
+      const label = players[playerIndex]?.label ?? PLAYER_PLACEHOLDERS[playerIndex]?.label ?? 'Team';
+      setFeedback(`${label} is playing the board.`);
       startTimer('playGuess', TIMER_CONFIG.playGuess, () => handleMissRef.current?.('timeout'));
     },
-    [startTimer, stopTimer],
+    [players, startTimer, stopTimer],
   );
 
   const handleControlChoice = useCallback(
     (choice) => {
       const owner = controlPlayer ?? 0;
-      const target = choice === 'play' ? owner : getOpponentIndex(owner);
+      const target = choice === 'play' ? owner : getOpponentIndex(owner, playerCount);
       setControlPlayer(target);
       beginPlaying(target);
     },
-    [beginPlaying, controlPlayer],
+    [beginPlaying, controlPlayer, playerCount],
   );
 
   // Sends the contestant guess to the AI endpoint, then hydrates the returned slot.
@@ -459,17 +474,18 @@ export default function useGameBoardEngine() {
     (force = false) => {
       if (roundStatus.state !== 'idle') return;
       if (!force && phase !== 'faceoffBuzz') return;
-      const playerIndex = faceoffCycleRef.current % PLAYER_PLACEHOLDERS.length;
+      const playerIndex = playerCount ? faceoffCycleRef.current % playerCount : 0;
       faceoffCycleRef.current += 1;
       stopTimer();
       setBuzzWinner(playerIndex);
       setActivePlayerIndex(playerIndex);
       setPhase('faceoffAnswer');
-      setFeedback(`${PLAYER_PLACEHOLDERS[playerIndex].label} buzzed first—answer now!`);
+      const label = players[playerIndex]?.label ?? PLAYER_PLACEHOLDERS[playerIndex]?.label ?? 'Team';
+      setFeedback(`${label} buzzed first—answer now!`);
       setGuess('');
       startTimer('faceoffAnswer', TIMER_CONFIG.faceoffAnswer, () => handleMissRef.current?.('timeout'));
     },
-    [phase, roundStatus.state, startTimer, stopTimer],
+    [phase, playerCount, players, roundStatus.state, startTimer, stopTimer],
   );
 
   useEffect(() => {
@@ -502,10 +518,10 @@ export default function useGameBoardEngine() {
       if (value < TOTAL_ROUNDS - 1) {
         return value + 1;
       }
-      setScores(Array(PLAYER_PLACEHOLDERS.length).fill(0));
+      setScores(Array(playerCount).fill(0));
       return 0;
     });
-  }, []);
+  }, [playerCount]);
 
   const graceMs = TIMER_CONFIG.countdownGrace * 1000;
   const timerSecondsRemaining = timerState.mode

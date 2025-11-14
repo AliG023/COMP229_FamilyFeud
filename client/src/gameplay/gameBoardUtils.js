@@ -24,9 +24,10 @@ export function buildAnswerSlots(round) {
   return Array.from({ length: SLOT_COUNT }, (_, index) => normalized[index] ?? null);
 }
 
-export function getOpponentIndex(playerIndex) {
-  // Two placeholder teams cycle 0 -> 1 -> 0.
-  return (playerIndex + 1) % PLAYER_PLACEHOLDERS.length;
+export function getOpponentIndex(playerIndex, playerCount = PLAYER_PLACEHOLDERS.length) {
+  // Two placeholder teams cycle 0 -> 1 -> 0 (extendable for future rosters).
+  if (!playerCount) return 0;
+  return (playerIndex + 1) % playerCount;
 }
 
 export function isSpaceKey(event) {

@@ -4,7 +4,7 @@
  * @since 2025-11-11
  * @purpose Interactive Family Feud board prototype that now delegates game logic to the gameplay engine.
  */
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { PRIMARY_NAV_LINKS } from '../utils/navigation.js';
 import {
@@ -18,11 +18,30 @@ import {
   TIMER_CARD_ASSET,
 } from '../gameplay/gameBoardConstants.js';
 import useGameBoardEngine from '../gameplay/useGameBoardEngine.js';
+import { useAuth } from '../components/auth/AuthContext.js';
 
 export default function GameBoard() {
   const [menuOpen, setMenuOpen] = useState(false);
   const toggleMenu = () => setMenuOpen((value) => !value);
   const closeMenu = () => setMenuOpen(false);
+  const { user } = useAuth();
+  const players = useMemo(() => {
+    if (!user) return PLAYER_PLACEHOLDERS;
+    const avatarCandidate =
+      user.avatarUrl ||
+      user.avatar ||
+      user.profilePicture ||
+      user.photo ||
+      PLAYER_PLACEHOLDERS[0].avatar;
+    return [
+      {
+        ...PLAYER_PLACEHOLDERS[0],
+        playerName: user.name || PLAYER_PLACEHOLDERS[0].playerName,
+        avatar: avatarCandidate || PLAYER_PLACEHOLDERS[0].avatar,
+      },
+      ...PLAYER_PLACEHOLDERS.slice(1),
+    ];
+  }, [user]);
 
   const {
     currentRound,
@@ -53,7 +72,7 @@ export default function GameBoard() {
     handleControlChoice,
     advanceRound,
     reloadRound,
-  } = useGameBoardEngine();
+  } = useGameBoardEngine(players);
 
   const strikesDisplay = Array.from({ length: 3 }, (_, index) => (
     <span key={index} className={index < strikes ? 'is-hit' : ''}>
@@ -163,7 +182,8 @@ export default function GameBoard() {
                 </div>
                 {controlPlayer !== null ? (
                   <div className="game-board-round-meta__item game-board-control-tag">
-                    Control: {PLAYER_PLACEHOLDERS[controlPlayer].label}
+                    Control:{' '}
+                    {players[controlPlayer]?.label ?? PLAYER_PLACEHOLDERS[controlPlayer]?.label ?? 'Team'}
                   </div>
                 ) : null}
               </div>
@@ -204,7 +224,7 @@ export default function GameBoard() {
               </section>
 
               <div className="game-board-sides" aria-label="Player placeholders">
-                {PLAYER_PLACEHOLDERS.map((player, index) => {
+                {players.map((player, index) => {
                   const isActive = index === activePlayerIndex;
                   const hasControl = controlPlayer === index;
                   const showPlayControlsForPlayer = showPlayOrPassActions && hasControl;
