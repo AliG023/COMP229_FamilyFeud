@@ -56,7 +56,7 @@ export default function AuthProvider({ children }) {
 
   const signUp = async (name, email, password) => {
     try {
-      const res = await auth.signup(name, email, password)
+      const res = await auth.signup(name, email, password);
 
       if (!res.ok) {
         const e = await res.json();
