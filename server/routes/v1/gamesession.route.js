@@ -24,7 +24,7 @@ export default Router()
   .post('/:id/round', authMiddleware.requireSignin, startRound)
   .put('/:id/team/:teamId', authMiddleware.requireSignin, updateTeam)
   .post('/:id/reveal-answer', authMiddleware.requireSignin, revealAnswer)
-  .post('/:id/add-strike', authMiddleware.requireSignin, addStrike)
+  .post('/:id/team/:teamId/add-strike', authMiddleware.requireSignin, addStrike)
   .post('/:id/team/:teamId/award-points', authMiddleware.requireSignin, awardPoints)
   .post('/:id/end-round', authMiddleware.requireSignin, endRound)
 
