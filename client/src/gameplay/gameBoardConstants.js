@@ -23,9 +23,10 @@ export const HIDDEN_CARD_ASSETS = [
 // Card slots are locked to their TV positions. Pair top rows as 1/4, 2/5, 3/6, then append leftover slots.
 export const DISPLAY_ORDER = (() => {
   const desiredPairings = [
-    [0, 3], // 1 / 4
-    [1, 4], // 2 / 5
-    [2, 5], // 3 / 6
+    [0, 4], // 1 / 5
+    [1, 5], // 2 / 6
+    [2, 6], // 3 / 7
+    [3, 7], // 4 / 8
   ];
   const order = [];
   const used = new Set();
