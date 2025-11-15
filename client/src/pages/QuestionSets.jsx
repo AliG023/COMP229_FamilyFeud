@@ -20,7 +20,7 @@ export default function QuestionSets() {
   useEffect(() => {
     const fetchQuestionSets = async () => {
       try {
-        const response = await fetch('/api/v1/question-sets', {
+        const response = await apiFetch('/question-sets', {
           credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
         });
