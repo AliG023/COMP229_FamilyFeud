@@ -29,7 +29,6 @@ export const getQuestionSet = async (req, res) => {
 // Create a new question set
 export const createQuestionSet = async (req, res) => {
   try {
-    console.log("reqbody: ", req.body);
     const { title, category, prompt, roundType, tags, answers } = req.body;
 
     // Create the question set
