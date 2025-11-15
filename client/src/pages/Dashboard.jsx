@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageSection from '../components/PageSection.jsx';
+import { apiFetch } from '../utils/api.js';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function Dashboard() {
       try {
         // Fetch question sets (non-critical - can fail gracefully)
         try {
-          const setsResponse = await fetch('/api/v1/question-sets', {
+          const setsResponse = await apiFetch('/question-sets', {
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
           });
@@ -48,7 +49,7 @@ export default function Dashboard() {
 
         // Fetch sessions (also non-critical)
         try {
-          const sessionsResponse = await fetch('/api/v1/gamesession', {
+          const sessionsResponse = await apiFetch('/gamesession', {
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
           });
