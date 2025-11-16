@@ -33,7 +33,7 @@ const requireSignin = async (req, res, next) => {
 
 const hasAuthorization = (req, res, next) => {
   const authorized = req.params && req.auth && (
-    req.params.id == req.auth._id ||
+    req.params.id === req.auth._id.toString() ||
     req.user.admin
   );
 
