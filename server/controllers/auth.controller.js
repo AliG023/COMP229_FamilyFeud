@@ -2,8 +2,8 @@
 import generateToken from '../utils/jwt.js'
 import User from '../models/user.model.js'
 import { handleUserSaveError } from '../helpers/dbErrorHandler.js'
+import config from '../config/config.js';
 
-const isProduction = process.env.NODE_ENV === 'production';
 
 export default {
 
@@ -43,23 +43,11 @@ export default {
         user = await saveUser(req.body),
         token = generateToken(user);
 
-      res.cookie('t', token, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
-        maxAge: 3600000
-      });
+      res.cookie('t', token, { ...config.cookieOptions });
 
       return res.status(201).json({
         message: "User registered successfully",
-        user: {
-          _id: user._id,
-          email: user.email,
-          admin: user.admin,
-          username: user.username,
-          created: user.created,
-          updated: user.updated
-        },
+        user: { ...config.userBody(user) },
         token
       });
     }
@@ -83,23 +71,11 @@ export default {
       if (!await user.comparePassword(password)) return res.status(401).send({ error: "Passwords don't match." });
 
       const token = generateToken(user);
-      res.cookie('t', token, {
-        httpOnly: true,
-        secure: isProduction,
-        sameSite: isProduction ? 'none' : 'lax',
-        maxAge: 3600000
-      });
+      res.cookie('t', token, { ...config.cookieOptions });
 
       res.status(200).json({
         message: "Signed in successfully",
-        user: {
-          _id: user._id,
-          email: user.email,
-          admin: user.admin,
-          username: user.username,
-          created: user.created,
-          updated: user.updated
-        },
+        user: { ...config.userBody(user) },
         token
       });
     }

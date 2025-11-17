@@ -6,6 +6,21 @@ const config = {
     jwtSecret: process.env.JWT_SECRET || 'your_jwt_secret_here',
     mongoUri: process.env.MONGODB_URI ||
         process.env.MONGO_HOST || 'mongodb://' + (process.env.IP || 'localhost') + ':' + (process.env.MONGO_PORT || '27017') + '/mernproject'
-}
+};
 
-export default config
+const cookieOptions = {
+  httpOnly: true,
+  secure: config.env === 'production',
+  sameSite: config.env === 'production' ? 'strict' : 'lax',
+  maxAge: 3600000
+};
+const userBody = (user) => ({
+  _id: user._id,
+  email: user.email,
+  admin: user.admin,
+  username: user.username,
+  created: user.created,
+  updated: user.updated
+});
+
+export default { ...config, cookieOptions, userBody };
