@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageSection from '../components/PageSection.jsx';
-import profileIcon from '../assets/Icon.png';
+import profileIcon from '/Default_Avatar.jpg';
 import { uploads, users } from '../utils/api.js';
 import { useAuth } from '../components/auth/AuthContext.js';
 import { placeholderProfile } from '../temp/profilePlaceholder.js';
@@ -20,7 +20,7 @@ export default function UserProfile() {
         username: '',
         displayName: '',
         bio: '',
-        timezone: '',
+        country: '',
         avatarUrl: '',
         password: '',
     });
@@ -41,11 +41,11 @@ const [status, setStatus] = useState({
                     ...prev,
                     username: data.username || '',
                     displayName: data.displayName || '',
-                    bio: data.bio || '',
-                    timezone: data.timezone || '',
-                    avatarUrl: data.avatarUrl || '',
-                }));
-            } catch (err) {
+                bio: data.bio || '',
+                country: data.country || '',
+                avatarUrl: data.avatarUrl || '',
+            }));
+        } catch (err) {
                 setFormData((prev) => ({
                     ...prev,
                     username: placeholderProfile.username,
@@ -101,9 +101,9 @@ const save = async () => {
             username: formData.username,
             displayName: formData.displayName,
             bio: formData.bio,
-            timezone: formData.timezone,
-            avatarUrl: formData.avatarUrl
-        };
+        country: formData.country,
+        avatarUrl: formData.avatarUrl
+      };
         if (formData.password) payload.password = formData.password;
 
         const res = await users.update(user._id, payload);
@@ -190,13 +190,13 @@ return (
 </label>
 
     <label>
-        Timezone
+        Country / Region
         <input
             type='text'
-            name='timezone'
-            value={formData.timezone}
+            name='country'
+            value={formData.country}
             onChange={handleChange}
-            placeholder='e.g. America/Toronto'
+            placeholder='e.g. Canada'
             disabled={isSubmitting}
         />
 </label>

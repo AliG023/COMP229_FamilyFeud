@@ -39,7 +39,7 @@ export default function SignUp() {
 
       setStatus({ state: 'success', message: /*`${payload?.name ?? 'New host'}*/ "registered." /*Await approval email.` */ });
       // setFormData(INITIAL_FORM);
-      navigate('/');
+      navigate('/profile');
 
       // TODO (Backend Team): include onboarding status (pending/approved) in response to guide UI confirmation.
 

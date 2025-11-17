@@ -44,11 +44,6 @@ export const NAV_ITEMS = [
     label: 'Leaderboard',
     description: 'View the rankings of all teams.',
   },
-  {
-    path: '/player',
-    label: 'Player Join',
-    description: 'Entry point for contestants to join matches using an access code.',
-  },
 ];
 
 export const AUTH_NAV_ITEMS = [
