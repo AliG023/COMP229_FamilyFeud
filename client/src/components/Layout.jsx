@@ -16,8 +16,7 @@ export default function Layout() {
   const [status, setStatus] = useState({ state: 'idle', message: '' });
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { signOut, user, isLoggedIn } = useAuth();
-  const isAdmin = Boolean(user?.admin);
+  const { signOut, user, isLoggedIn, isAdmin, isActualAdmin, viewAsUser, setViewAsUser } = useAuth();
 
   // Shared nav for all users.
   const navItems = [HOME_NAV_ITEM, ...NAV_ITEMS];
@@ -96,11 +95,25 @@ export default function Layout() {
         </header>
       )}
 
-      {isAdmin ? (
+      {isActualAdmin ? (
         <AdminDrawer
           open={adminMenuOpen}
           onToggle={() => setAdminMenuOpen((value) => !value)}
-          links={[HOME_NAV_ITEM, ...NAV_ITEMS]}
+          onCommand={(cmd) => {
+            if (cmd === 'toggle-view') {
+              setViewAsUser((value) => !value);
+            }
+          }}
+          links={[
+            HOME_NAV_ITEM,
+            ...NAV_ITEMS.map((link) => ({
+              ...link,
+              label: viewAsUser ? `${link.label} (User View)` : link.label
+            })),
+            { path: '/question-sets', label: 'Question Sets' },
+            { path: '/session-create', label: 'Create Session' },
+            { path: '#toggle-view', label: viewAsUser ? 'View as Admin' : 'View as User' }
+          ]}
         />
       ) : null}
 

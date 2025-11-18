@@ -8,7 +8,8 @@ export default function AuthProvider({ children }) {
   const
     [isLoggedIn, setIsLoggedIn] = useState(false),
     [user, setUser] = useState(null),
-    [isAuthLoading, setIsAuthLoading] = useState(true);
+    [isAuthLoading, setIsAuthLoading] = useState(true),
+    [viewAsUser, setViewAsUser] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -87,8 +88,22 @@ export default function AuthProvider({ children }) {
     };
   };
 
+  const isActualAdmin = Boolean(user?.admin);
+  const isAdmin = isActualAdmin && !viewAsUser;
+
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, isAuthLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{
+      isLoggedIn,
+      user,
+      isAdmin,
+      isActualAdmin,
+      viewAsUser,
+      setViewAsUser,
+      isAuthLoading,
+      signIn,
+      signUp,
+      signOut
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -17,7 +17,6 @@ import SignedOut from './pages/SignedOut.jsx';
 import Home from './pages/Home.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import QuestionSets from './pages/QuestionSets.jsx';
-import Sessions from './pages/Sessions.jsx';
 import SessionCreate from './pages/SessionCreate.jsx';
 import Leaderboard from './pages/Leaderboard.jsx';
 import GameBoard from './pages/GameBoard.jsx';
@@ -38,8 +37,7 @@ export default function App() {
             <Route path="dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="question-sets" element={<ProtectedRoute><QuestionSets /></ProtectedRoute>} />
             <Route path="/game-board" element={<ProtectedRoute><GameBoard /></ProtectedRoute>} />
-            <Route path="sessions" element={<ProtectedRoute><Sessions /></ProtectedRoute>} />
-            <Route path="sessions/create" element={<ProtectedRoute><SessionCreate /></ProtectedRoute>} />
+            <Route path="session-create" element={<ProtectedRoute><SessionCreate /></ProtectedRoute>} />
             <Route path="leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
             <Route path="signin" element={<SignIn />} />
             <Route path="signup" element={<SignUp />} />

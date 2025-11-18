@@ -55,11 +55,11 @@ export default function SignUp() {
     <div className="page page--auth">
       <header className="page__header">
         <p className="eyebrow">Account</p>
-        <h2>Create Host Account</h2>
-        <p>Request access to question management and live session tools.</p>
+        <h2>Create Account</h2>
+        <p>Sign up to play, host sessions, and manage content.</p>
       </header>
 
-      <PageSection title="Host Details" description="Accounts require approval before they go live.">
+      <PageSection title="Account Details" description="Enter your credentials to get started.">
         <form className="form-grid form-grid--vertical" onSubmit={handleSubmit}>
           <label>
             Username
@@ -68,7 +68,7 @@ export default function SignUp() {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              placeholder="Alex_Kachur"
+              placeholder="Host_Name"
               autoComplete="username"
               required
               disabled={isSubmitting}
@@ -81,7 +81,7 @@ export default function SignUp() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="alex@familyfeud.ca"
+              placeholder="host@example.com"
               autoComplete="email"
               required
               disabled={isSubmitting}

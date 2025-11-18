@@ -6,8 +6,7 @@ import { useAuth } from '../components/auth/AuthContext.js';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const isAdmin = Boolean(user?.admin);
+  const { isAdmin } = useAuth();
   const [questionSets, setQuestionSets] = useState([]);
   const [questions, setQuestions] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -172,60 +171,16 @@ export default function Dashboard() {
       </PageSection>
 
       <PageSection
-        title="Custom Question Sets"
-        description="Build and curate your own Feud-style surveys with prompts, answers, and point values."
-        actions={isAdmin ? <button type="button" onClick={() => navigate('/question-sets/create')}>Create New Set</button> : null}
-      >
-        {loadingSets ? (
-          <div className="loading-message">Loading question sets…</div>
-        ) : questionSets.length === 0 ? (
-          <div className="empty-state">
-            <p>No question sets found.</p>
-            <p>{isAdmin ? 'Create your first question set to organize your game content.' : 'Check back later for available surveys.'}</p>
-          </div>
-        ) : (
-          <div className="table-placeholder">
-            <div className="table-placeholder__row table-placeholder__row--head">
-              <span>Title</span>
-              <span>Round Type</span>
-              <span>Questions</span>
-              <span>Tags</span>
-              {isAdmin ? <span>Actions</span> : null}
-            </div>
-            {questionSets.map((set) => (
-              <div key={set._id} className="table-placeholder__row">
-                <span>{set.title}</span>
-                <span>{set.roundType}</span>
-                <span>{set.questions?.length || 0}</span>
-                <span>{set.tags?.join(', ') || 'None'}</span>
-                {isAdmin ? (
-                  <span>
-                    <button
-                      type="button"
-                      className="link-button"
-                      onClick={() => navigate(`/question-sets/${set._id}`)}
-                    >
-                      View
-                    </button>
-                  </span>
-                ) : null}
-              </div>
-            ))}
-          </div>
-        )}
-      </PageSection>
-
-      <PageSection
         title="Active Sessions"
         description="Monitor lobbies and live games."
-        actions={isAdmin ? <button type="button" onClick={() => navigate('/sessions/create')}>Create Session</button> : null}
+        actions={<button type="button" onClick={() => navigate('/session-create')}>Create Session</button>}
       >
         {loadingSessions ? (
           <div className="loading-message">Loading sessions…</div>
         ) : sessions.length === 0 ? (
           <div className="empty-state">
             <p>No active sessions.</p>
-            <p>{isAdmin ? 'Create a new session to start a game.' : 'Waiting for a host to start a session.'}</p>
+            <p>Create a new session to start a game.</p>
           </div>
         ) : (
           <div className="table-placeholder">
@@ -235,7 +190,7 @@ export default function Dashboard() {
               <span>Question Set</span>
               <span>Teams</span>
               <span>Updated</span>
-              {isAdmin ? <span>Actions</span> : null}
+              <span>Actions</span>
             </div>
             {sessions.map((session) => (
               <div key={session.id} className="table-placeholder__row">
@@ -244,17 +199,57 @@ export default function Dashboard() {
                 <span>{session.questionSetId || 'None'}</span>
                 <span>{session.teams?.map((team) => team.name).join(' vs ') || 'None'}</span>
                 <span>{session.updatedAt ? new Date(session.updatedAt).toLocaleTimeString() : 'Never'}</span>
-                {isAdmin ? (
-                  <span>
-                    <button
-                      type="button"
-                      className="link-button"
-                      onClick={() => navigate(`/sessions/${session.id}`)}
-                    >
-                      Open
-                    </button>
-                  </span>
-                ) : null}
+                <span>
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => navigate(`/sessions/${session.id}`)}
+                  >
+                    Open
+                  </button>
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </PageSection>
+
+      <PageSection
+        title="Custom Question Sets"
+        description="Build and curate your own Feud-style surveys with prompts, answers, and point values."
+        actions={<button type="button" onClick={() => navigate('/question-sets')}>Create New Set</button>}
+      >
+        {loadingSets ? (
+          <div className="loading-message">Loading question sets…</div>
+        ) : questionSets.length === 0 ? (
+          <div className="empty-state">
+            <p>No question sets found.</p>
+            <p>Create your first question set to organize your game content.</p>
+          </div>
+        ) : (
+          <div className="table-placeholder">
+            <div className="table-placeholder__row table-placeholder__row--head">
+              <span>Title</span>
+              <span>Round Type</span>
+              <span>Questions</span>
+              <span>Tags</span>
+              <span>Actions</span>
+            </div>
+            {questionSets.map((set) => (
+              <div key={set._id} className="table-placeholder__row">
+                <span>{set.title}</span>
+                <span>{set.roundType}</span>
+                <span>{set.questions?.length || 0}</span>
+                <span>{set.tags?.join(', ') || 'None'}</span>
+                <span>
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => navigate(`/question-sets/${set._id}`)}
+                  >
+                    View
+                  </button>
+                </span>
               </div>
             ))}
           </div>

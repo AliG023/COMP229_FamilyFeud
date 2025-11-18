@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 /**
  * Reusable hamburger + drawer component (based on landing/game board pattern).
  */
-export default function AdminDrawer({ open, onToggle, links }) {
+export default function AdminDrawer({ open, onToggle, links, onCommand }) {
   return (
     <div
       className="landing-basic__chrome landing-basic__chrome--floating"
@@ -35,20 +35,26 @@ export default function AdminDrawer({ open, onToggle, links }) {
             aria-hidden={!open}
             style={{ zIndex: 9999, pointerEvents: 'auto' }}
           >
-            <button type="button" className="landing-basic__drawer-close" onClick={onToggle} aria-label="Close menu">
-              ×
-            </button>
-            <ul className="landing-basic__drawer-list">
-              {links.map((link) => (
-                <li key={link.path}>
-                  <Link to={link.path} onClick={onToggle}>
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-        </>
+              <button type="button" className="landing-basic__drawer-close" onClick={onToggle} aria-label="Close menu">
+                ×
+              </button>
+              <ul className="landing-basic__drawer-list">
+                {links.map((link) => (
+                  <li key={link.path}>
+                    {link.path === '#toggle-view' ? (
+                      <button type="button" className="link-button" onClick={() => { onToggle(); onCommand?.('toggle-view'); }}>
+                        {link.label}
+                      </button>
+                    ) : (
+                      <Link to={link.path} onClick={onToggle}>
+                        {link.label}
+                      </Link>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          </>
       ) : null}
     </div>
   );

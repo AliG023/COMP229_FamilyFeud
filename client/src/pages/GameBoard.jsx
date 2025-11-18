@@ -101,7 +101,11 @@ export default function GameBoard() {
       <AdminDrawer
         open={menuOpen}
         onToggle={toggleMenu}
-        links={PRIMARY_NAV_LINKS}
+        links={[
+          ...PRIMARY_NAV_LINKS,
+          { path: '/question-sets', label: 'Question Sets' },
+          { path: '/session-create', label: 'Create Session' }
+        ]}
       />
 
       <main className="landing-basic__body game-board__body">

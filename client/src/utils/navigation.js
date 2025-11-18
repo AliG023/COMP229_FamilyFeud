@@ -19,16 +19,6 @@ export const NAV_ITEMS = [
     description: 'Control surface for hosts with quick stats and active sessions.',
   },
   {
-    path: '/question-sets',
-    label: 'Question Sets',
-    description: 'Create, edit, and curate survey banks for upcoming matches.',
-  },
-  {
-    path: '/sessions',
-    label: 'Sessions',
-    description: 'Monitor in-progress games, manage teams, and launch rounds.',
-  },
-  {
     path: "/profile",
     label: "Profile",
     description: "View and update account details.",
