@@ -1,6 +1,7 @@
 import 'dotenv/config';
 
 import express from "express";
+import path from "path";
 import config from "./config/config.js";
 import mongoose from "mongoose";
 
