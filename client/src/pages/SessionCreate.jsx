@@ -11,6 +11,7 @@ import { apiFetch, sessions } from '../utils/api.js';
 import { useAuth } from '../components/auth/AuthContext.js';
 
 const generateId = () => `sess-${Date.now()}-${Math.floor(Math.random() * 1e5)}`;
+const generateCode = () => String(Math.floor(100000 + Math.random() * 900000));
 
 export default function SessionCreate() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function SessionCreate() {
   const [formData, setFormData] = useState({
     hostName: user?.username || 'Host',
     questionSetId: 'default',
-    accessCode: '',
+    accessCode: generateCode(),
     id: generateId()
   });
   const [settings, setSettings] = useState({
@@ -75,8 +76,8 @@ export default function SessionCreate() {
       const payload = {
         id: formData.id || generateId(),
         hostName: user?.username || formData.hostName || 'Host',
-        accessCode: formData.accessCode || '',
-        questionSetId: formData.questionSetId === 'default' ? 'default' : formData.questionSetId,
+        accessCode: formData.accessCode || generateCode(),
+        questionSetId: formData.questionSetId === 'default' ? undefined : formData.questionSetId,
         teams: [],
         settings
       };
@@ -87,7 +88,7 @@ export default function SessionCreate() {
       }
       // TODO: save settings per user when backend supports it (e.g., /api/v1/user/:id/settings)
       setStatus({ state: 'success', message: 'Session created' });
-      navigate(`/lobby/${payload.id}`);
+      navigate('/sessions');
     } catch (err) {
       setStatus({ state: 'error', message: err.message });
     }
@@ -155,7 +156,8 @@ export default function SessionCreate() {
               name="accessCode"
               value={formData.accessCode}
               onChange={handleChange}
-              placeholder="Optional: set a code or leave blank for open lobby"
+              required
+              placeholder="6-digit code"
             />
           </label>
 
