@@ -11,20 +11,6 @@ const TeamSchema = new mongoose.Schema({
     trim: true,
     required: "Team name is required"
   },
-  ready: {
-    type: Boolean,
-    default: false
-  },
-  players: {
-    type: [
-      {
-        id: { type: String, required: true },
-        name: { type: String, required: true },
-        ready: { type: Boolean, default: false }
-      }
-    ],
-    default: []
-  },
   score: {
     type: Number,
     default: 0
@@ -46,62 +32,22 @@ const ActiveSessionSchema = new mongoose.Schema({
     trim: true,
     required: "Host name is required"
   },
-  hostUserId: {
-    type: String,
-    default: null,
-    index: true
-  },
-  activePlayerId: {
-    type: String,
-    default: null
-  },
   accessCode: {
     type: String,
-    default: ''
+    required: "Access code is required"
   },
   status: {
     type: String,
-    enum: ['lobby', 'ready', 'in_progress', 'completed'],
+    enum: ['lobby', 'in_progress', 'completed'],
     default: 'lobby'
   },
   questionSetId: {
     type: String,
     required: "Question set ID is required"
   },
-  settings: {
-    type: Object,
-    default: {}
-  },
   teams: {
     type: [TeamSchema],
     default: []
-  },
-  controlTeamId: {
-    type: String,
-    default: null
-  },
-  revealedAnswers: {
-    type: [
-      {
-        index: Number,
-        answer: String,
-        points: Number,
-        revealed: { type: Boolean, default: false }
-      }
-    ],
-    default: []
-  },
-  currentQuestionId: {
-    type: String,
-    default: null
-  },
-  currentQuestionText: {
-    type: String,
-    default: null
-  },
-  currentQuestionSize: {
-    type: Number,
-    default: null
   },
   currentRound: {
     type: Number,
