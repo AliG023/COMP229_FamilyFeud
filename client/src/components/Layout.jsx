@@ -4,44 +4,30 @@
  * @since 2025-11-04
  * @purpose Provides shared chrome for host dashboard views including header navigation.
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { NAV_ITEMS, AUTH_NAV_ITEMS, HOME_NAV_ITEM } from '../utils/navigation.js';
 import { useAuth } from '../components/auth/AuthContext.js';
-import AdminDrawer from './AdminDrawer.jsx';
 
 export default function Layout() {
   const location = useLocation();
   const isLanding = location.pathname === '/';
-  const [status, setStatus] = useState({ state: 'idle', message: '' });
-  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const [status, setStatus] = useState('idle');
   const navigate = useNavigate();
-  const { signOut, isLoggedIn, isAdmin, isActualAdmin, viewAsUser, setViewAsUser } = useAuth();
-
-  // Shared nav for all users.
-  const navItems = [HOME_NAV_ITEM, ...NAV_ITEMS];
-  const publicNavItems = [HOME_NAV_ITEM];
-
-  // Reset nav action status on route change to avoid stale loading/error states.
-  useEffect(() => {
-    setStatus({ state: 'idle', message: '' });
-    setAdminMenuOpen(false);
-  }, [location.pathname]);
+  const { signOut } = useAuth();
 
   const handleSignOut = async () => {
-    setStatus({ state: 'loading', message: '' });
+    setStatus('loading');
     try {
       const { success, message } = await signOut();
       // setSignOutStatus('success'); // no point setting a status that wont be seen due to navigation.
-      if (success) {
-        navigate('/');
-        setStatus({ state: 'idle', message: '' });
-      }
+      if (success)
+        navigate('/signed-out');
       else 
         setStatus({ state: 'error', message: message || 'Checking credentials…' });
       
     } catch (error) {
-      setStatus({ state: 'error', message: 'Failed to sign out' });
+      setStatus('error');
       console.error('Failed to sign out', error);
     }
   };
@@ -62,7 +48,7 @@ export default function Layout() {
 
           <nav className="app-nav">
             <ul className="app-nav__list">
-              {(isLoggedIn ? navItems : publicNavItems).map((item) => (
+              {[HOME_NAV_ITEM, ...NAV_ITEMS].map((item) => (
                 <li key={item.path}>
                   <NavLink to={item.path} className="app-nav__link">
                     {item.label}
@@ -71,53 +57,53 @@ export default function Layout() {
               ))}
             </ul>
             <ul className="app-nav__list app-nav__list--auth">
-              {!isLoggedIn ? AUTH_NAV_ITEMS.map((item) => (
+              {AUTH_NAV_ITEMS.map((item) => (
                 <li key={item.path}>
                   <NavLink to={item.path} className="app-nav__link">
                     {item.label}
                   </NavLink>
                 </li>
-              )) : null}
+              ))}
+              <li>
+                <button
+                  type="button"
+                  className="app-nav__link app-nav__link--button"
+                  onClick={handleSignOut}
+                  disabled={status === 'loading'}
+                >
+                  {status === 'loading' ? 'Signing Out…' : 'Sign Out'}
+                </button>
+              </li>
+              {/* TODO (Frontend): replace temporary sign-out button with auth-aware user menu. 
+
+              import { useAuth } from '../components/auth/AuthContext.js';
+              const { isLoggedIn, user } = useAuth();
+
               {isLoggedIn ? (
+              <>
                 <li>
-                  <button
-                    type="button"
-                    className="app-nav__link app-nav__link--button"
-                    onClick={handleSignOut}
-                    disabled={status.state === 'loading'}
-                  >
-                    {status.state === 'loading' ? 'Signing Out…' : 'Sign Out'}
-                  </button>
+                  <Link to="path" >page</Link>
                 </li>
-              ) : null}
+                <li>
+                  <Link to="path" >page</Link>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link to="path" >page</Link>
+                </li>
+                <li>
+                  <Link to="path" >page</Link>
+                </li>
+              </>
+            )}
+
+              */}
             </ul>
           </nav>
         </header>
       )}
-
-      {isActualAdmin ? (
-        <AdminDrawer
-          open={adminMenuOpen}
-          onToggle={() => setAdminMenuOpen((value) => !value)}
-          onCommand={(cmd) => {
-            if (cmd === 'toggle-view') {
-              setViewAsUser((value) => !value);
-            }
-          }}
-          links={[
-            HOME_NAV_ITEM,
-            ...NAV_ITEMS.map((link) => ({
-              ...link,
-              label: viewAsUser ? `${link.label} (User View)` : link.label
-            })),
-            { path: '/question-sets', label: 'Question Sets' },
-            { path: '/session-create', label: 'Create Session' },
-            { path: '/signin', label: 'Sign In' },
-            { path: '/signup', label: 'Register' },
-            { path: '#toggle-view', label: viewAsUser ? 'View as Admin' : 'View as User' }
-          ]}
-        />
-      ) : null}
 
       <main className="app-main">
         <Outlet />

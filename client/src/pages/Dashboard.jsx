@@ -2,137 +2,91 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageSection from '../components/PageSection.jsx';
 import { apiFetch } from '../utils/api.js';
-import { useAuth } from '../components/auth/AuthContext.js';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { isAdmin } = useAuth();
   const [questionSets, setQuestionSets] = useState([]);
-  const [questions, setQuestions] = useState([]);
   const [sessions, setSessions] = useState([]);
-  const [loadingSets, setLoadingSets] = useState(true);
-  const [loadingSessions, setLoadingSessions] = useState(true);
-  const [statsLoading, setStatsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
   const [stats, setStats] = useState({
     totalSets: 0,
     doubleTriple: 0,
-    fastMoneyTagged: 0,
+    holiday: 0,
     totalQuestions: 0
   });
-  const [setsError, setSetsError] = useState(false);
-  const [questionsError, setQuestionsError] = useState(false);
 
   useEffect(() => {
-    const fetchSets = async () => {
+    const fetchData = async () => {
       try {
-        const setsResponse = await apiFetch('/question-sets', {
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (setsResponse.ok) {
-          const setsData = await setsResponse.json();
-          setQuestionSets(setsData);
-          setSetsError(false);
-        } else {
-          console.warn('Question sets fetch warning:', await setsResponse.text());
-          setSetsError(true);
-        }
-      } catch (err) {
-        console.error('Question sets fetch error:', err);
-        setSetsError(true);
-      } finally {
-        setLoadingSets(false);
-      }
-    };
-
-    const fetchSessions = async () => {
-      try {
-        const sessionsResponse = await apiFetch('/gamesession', {
-          credentials: 'include',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (sessionsResponse.ok) {
-          const sessionsData = await sessionsResponse.json();
-          setSessions(sessionsData);
-        } else {
-          console.warn('Sessions fetch warning:', await sessionsResponse.text());
-        }
-      } catch (err) {
-        console.error('Sessions fetch error:', err);
-      } finally {
-        setLoadingSessions(false);
-      }
-    };
-
-    const fetchStats = async () => {
-      try {
-        let setsData = [];
-        let questionsData = [];
-
+        // Fetch question sets (non-critical - can fail gracefully)
         try {
           const setsResponse = await apiFetch('/question-sets', {
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
           });
+
+          let setsData = [];
           if (setsResponse.ok) {
             setsData = await setsResponse.json();
           } else {
-            setSetsError(true);
+            console.warn('Question sets fetch warning:', await setsResponse.text());
           }
-        } catch (err) {
-          setSetsError(true);
+
+          // Calculate stats safely
+          const calculatedStats = {
+            totalSets: setsData.length,
+            doubleTriple: setsData.filter(set => set.roundType !== 'single').length,
+            holiday: setsData.filter(set => set.tags?.includes('holiday')).length,
+            totalQuestions: setsData.reduce((sum, set) => sum + (set.questions?.length || 0), 0)
+          };
+          setStats(calculatedStats);
+          setQuestionSets(setsData);
+        } catch (setsErr) {
+          console.error('Question sets fetch error:', setsErr);
+          // We'll still show the dashboard, just with empty question sets
         }
 
+        // Fetch sessions (also non-critical)
         try {
-          const questionsResponse = await apiFetch('/question/all', {
+          const sessionsResponse = await apiFetch('/gamesession', {
             credentials: 'include',
             headers: { 'Content-Type': 'application/json' },
           });
-          if (questionsResponse.ok) {
-            questionsData = await questionsResponse.json();
+
+          if (sessionsResponse.ok) {
+            const sessionsData = await sessionsResponse.json();
+            setSessions(sessionsData);
           } else {
-            setQuestionsError(true);
+            console.warn('Sessions fetch warning:', await sessionsResponse.text());
           }
-        } catch (err) {
-          setQuestionsError(true);
+        } catch (sessionsErr) {
+          console.error('Sessions fetch error:', sessionsErr);
+          // We'll still show the dashboard, just with empty sessions
         }
 
-        const setsArr = setsData.length ? setsData : questionSets;
-        const questionsArr = questionsData.length ? questionsData : questions;
-
-        setStats({
-          totalSets: setsArr.length,
-          doubleTriple: questionsArr.filter(q => (q.answers?.length ?? 0) >= 7).length,
-          fastMoneyTagged: questionsArr.filter(q => {
-            const len = q.answers?.length ?? 0;
-            return len > 0 && len <= 4;
-          }).length,
-          totalQuestions: questionsArr.length
-        });
       } catch (err) {
-        console.error('Unexpected error calculating stats:', err);
+        // Only set error for completely unexpected errors
+        console.error('Unexpected error:', err);
         setFetchError('An unexpected error occurred. Please try again.');
       } finally {
-        setStatsLoading(false);
+        setLoading(false);
       }
     };
 
-    fetchSets();
-    fetchSessions();
-    fetchStats();
+    fetchData();
   }, []);
 
-  const renderStat = (value, isError) => isError ? 'ERROR' : value;
+  if (loading) {
+    return <div className="page page--stacked">Loading dashboard...</div>;
+  }
 
   return (
     <div className="page page--stacked">
       <header className="page__header">
-        <p className="eyebrow">Game Overview</p>
-        <h2>Family Feud Dashboard</h2>
-        <p>View custom survey content and live session activity.</p>
+        <p className="eyebrow">Control Center</p>
+        <h2>Welcome back, Host</h2>
+        <p>Review high-level activity before launching your next Family Feud session.</p>
       </header>
 
       {fetchError && (
@@ -144,28 +98,71 @@ export default function Dashboard() {
 
       <PageSection
         title="Content Overview"
-        description="Track custom question sets and round mix."
+        description="Track the question sets available for upcoming matches."
       >
-        {statsLoading ? (
-          <div className="loading-message">Loading content overview…</div>
+        <div className="grid grid--stats">
+          <article>
+            <p>Total Sets</p>
+            <strong>{stats.totalSets}</strong>
+          </article>
+          <article>
+            <p>Double/Triple Rounds</p>
+            <strong>{stats.doubleTriple}</strong>
+          </article>
+          <article>
+            <p>Tagged for Holiday Shows</p>
+            <strong>{stats.holiday}</strong>
+          </article>
+          <article>
+            <p>Total Questions</p>
+            <strong>{stats.totalQuestions}</strong>
+          </article>
+        </div>
+      </PageSection>
+
+      <PageSection
+        title="Question Sets"
+        description="Manage your question sets."
+        actions={<button type="button" onClick={() => navigate('/question-sets/create')}>Create New Set</button>}
+      >
+        {questionSets.length === 0 ? (
+          <div className="empty-state">
+            <p>No question sets found.</p>
+            <p>Create your first question set to organize your game content.</p>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => navigate('/question-sets/create')}
+            >
+              Create First Question Set
+            </button>
+          </div>
         ) : (
-          <div className="grid grid--stats">
-            <article>
-              <p>Total Custom Sets</p>
-              <strong>{renderStat(stats.totalSets, setsError)}</strong>
-            </article>
-            <article>
-              <p>Double/Triple Rounds</p>
-              <strong>{renderStat(stats.doubleTriple, questionsError)}</strong>
-            </article>
-            <article>
-              <p>Fast Money Questions</p>
-              <strong>{renderStat(stats.fastMoneyTagged, questionsError)}</strong>
-            </article>
-            <article>
-              <p>Total Questions</p>
-              <strong>{renderStat(stats.totalQuestions, questionsError)}</strong>
-            </article>
+          <div className="table-placeholder">
+            <div className="table-placeholder__row table-placeholder__row--head">
+              <span>Title</span>
+              <span>Round Type</span>
+              <span>Questions</span>
+              <span>Tags</span>
+              <span>Actions</span>
+            </div>
+            {questionSets.map((set) => (
+              <div key={set._id} className="table-placeholder__row">
+                <span>{set.title}</span>
+                <span>{set.roundType}</span>
+                <span>{set.questions?.length || 0}</span>
+                <span>{set.tags?.join(', ') || 'None'}</span>
+                <span>
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => navigate(`/question-sets/${set._id}`)}
+                  >
+                    View
+                  </button>
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </PageSection>
@@ -173,14 +170,19 @@ export default function Dashboard() {
       <PageSection
         title="Active Sessions"
         description="Monitor lobbies and live games."
-        actions={<button type="button" onClick={() => navigate('/session-create')}>Create Session</button>}
+        actions={<button type="button" onClick={() => navigate('/sessions/create')}>Create Session</button>}
       >
-        {loadingSessions ? (
-          <div className="loading-message">Loading sessions…</div>
-        ) : sessions.length === 0 ? (
+        {sessions.length === 0 ? (
           <div className="empty-state">
             <p>No active sessions.</p>
             <p>Create a new session to start a game.</p>
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => navigate('/sessions/create')}
+            >
+              Create New Session
+            </button>
           </div>
         ) : (
           <div className="table-placeholder">
@@ -206,48 +208,6 @@ export default function Dashboard() {
                     onClick={() => navigate(`/sessions/${session.id}`)}
                   >
                     Open
-                  </button>
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </PageSection>
-
-      <PageSection
-        title="Custom Question Sets"
-        description="Build and curate your own Feud-style surveys with prompts, answers, and point values."
-        actions={<button type="button" onClick={() => navigate('/question-sets')}>Create New Set</button>}
-      >
-        {loadingSets ? (
-          <div className="loading-message">Loading question sets…</div>
-        ) : questionSets.length === 0 ? (
-          <div className="empty-state">
-            <p>No question sets found.</p>
-            <p>Create your first question set to organize your game content.</p>
-          </div>
-        ) : (
-          <div className="table-placeholder">
-            <div className="table-placeholder__row table-placeholder__row--head">
-              <span>Title</span>
-              <span>Round Type</span>
-              <span>Questions</span>
-              <span>Tags</span>
-              <span>Actions</span>
-            </div>
-            {questionSets.map((set) => (
-              <div key={set._id} className="table-placeholder__row">
-                <span>{set.title}</span>
-                <span>{set.roundType}</span>
-                <span>{set.questions?.length || 0}</span>
-                <span>{set.tags?.join(', ') || 'None'}</span>
-                <span>
-                  <button
-                    type="button"
-                    className="link-button"
-                    onClick={() => navigate(`/question-sets/${set._id}`)}
-                  >
-                    View
                   </button>
                 </span>
               </div>
