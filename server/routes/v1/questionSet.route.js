@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import {
   getAllQuestionSets,
-  getMyQuestionSets,
   getQuestionSet,
   createQuestionSet,
   updateQuestionSet,
@@ -15,7 +14,6 @@ const router = Router();
 
 // Public routes
 router.get('/', getAllQuestionSets);
-router.get('/mine', authMiddleware.requireSignin, getMyQuestionSets);
 router.get('/:id', getQuestionSet);
 
 // Protected routes (require authentication)

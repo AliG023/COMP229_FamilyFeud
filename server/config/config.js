@@ -19,10 +19,6 @@ const userBody = (user) => ({
   email: user.email,
   admin: user.admin,
   username: user.username,
-  displayName: user.displayName,
-  avatarUrl: user.avatarUrl,
-  bio: user.bio,
-  country: user.country,
   created: user.created,
   updated: user.updated
 });

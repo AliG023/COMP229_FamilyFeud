@@ -39,7 +39,7 @@ export default function SignUp() {
 
       setStatus({ state: 'success', message: /*`${payload?.name ?? 'New host'}*/ "registered." /*Await approval email.` */ });
       // setFormData(INITIAL_FORM);
-      navigate('/profile');
+      navigate('/');
 
       // TODO (Backend Team): include onboarding status (pending/approved) in response to guide UI confirmation.
 
@@ -55,11 +55,11 @@ export default function SignUp() {
     <div className="page page--auth">
       <header className="page__header">
         <p className="eyebrow">Account</p>
-        <h2>Create Account</h2>
-        <p>Sign up to play, host sessions, and manage content.</p>
+        <h2>Create Host Account</h2>
+        <p>Request access to question management and live session tools.</p>
       </header>
 
-      <PageSection title="Account Details" description="Enter your credentials to get started.">
+      <PageSection title="Host Details" description="Accounts require approval before they go live.">
         <form className="form-grid form-grid--vertical" onSubmit={handleSubmit}>
           <label>
             Username
@@ -68,7 +68,7 @@ export default function SignUp() {
               name="username"
               value={formData.username}
               onChange={handleChange}
-              placeholder="Host_Name"
+              placeholder="Alex_Kachur"
               autoComplete="username"
               required
               disabled={isSubmitting}
@@ -81,7 +81,7 @@ export default function SignUp() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="host@example.com"
+              placeholder="alex@familyfeud.ca"
               autoComplete="email"
               required
               disabled={isSubmitting}
