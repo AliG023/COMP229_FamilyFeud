@@ -17,7 +17,7 @@ export default function Layout() {
   const isLanding = location.pathname === '/';
   const [status, setStatus] = useState('idle');
   const navigate = useNavigate();
-  const { signOut, isLoading } = useAuth();
+  const { signOut, isLoading, isLoggedIn } = useAuth();
 
   const handleSignOut = async () => {
     setStatus('loading');
@@ -52,6 +52,7 @@ export default function Layout() {
           </div>
 
           <nav className="app-nav">
+
             <ul className="app-nav__list">
               {[HOME_NAV_ITEM, ...NAV_ITEMS].map((item) => (
                 <li key={item.path}>
@@ -61,15 +62,18 @@ export default function Layout() {
                 </li>
               ))}
             </ul>
+
             <ul className="app-nav__list app-nav__list--auth">
-              {AUTH_NAV_ITEMS.map((item) => (
+
+              {!isLoggedIn && AUTH_NAV_ITEMS.map((item) => (
                 <li key={item.path}>
                   <NavLink to={item.path} className="app-nav__link">
                     {item.label}
                   </NavLink>
                 </li>
               ))}
-              <li>
+
+              {isLoggedIn && <li>
                 <button
                   type="button"
                   className="app-nav__link app-nav__link--button"
@@ -78,33 +82,7 @@ export default function Layout() {
                 >
                   {status === 'loading' ? 'Signing Out…' : 'Sign Out'}
                 </button>
-              </li>
-              {/* TODO (Frontend): replace temporary sign-out button with auth-aware user menu. 
-
-              import { useAuth } from '../components/auth/AuthContext.js';
-              const { isLoggedIn, user } = useAuth();
-
-              {isLoggedIn ? (
-              <>
-                <li>
-                  <Link to="path" >page</Link>
-                </li>
-                <li>
-                  <Link to="path" >page</Link>
-                </li>
-              </>
-            ) : (
-              <>
-                <li>
-                  <Link to="path" >page</Link>
-                </li>
-                <li>
-                  <Link to="path" >page</Link>
-                </li>
-              </>
-            )}
-
-              */}
+              </li>}
             </ul>
           </nav>
         </header>
