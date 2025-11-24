@@ -357,12 +357,7 @@ button:focus-visible {
   .form-grid input[type="number"],
   .form-grid select {
     max-width: 100%;
-  }
-  
-  .answer-list__row {
-    grid-template-columns: 1fr;
-    gap: 0.5rem;
-  }
+  } 
 }
 
 .form-grid label,
@@ -447,26 +442,6 @@ button:focus-visible {
 
 .form-status--success {
   color: #0f766e;
-}
-
-.answer-list {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.answer-list__row {
-  display: grid;
-  grid-template-columns: 1fr 120px;
-  gap: 0.75rem;
-  max-width: 500px;
-}
-
-.answer-list__row input[type="text"] {
-  min-width: 200px;
-}
-
-.answer-list__row input[type="number"] {
-  max-width: 120px;
 }
 
 .action-grid {
