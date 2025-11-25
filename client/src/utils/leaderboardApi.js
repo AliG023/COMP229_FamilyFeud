@@ -9,7 +9,7 @@ export const getLeaderboard = async () => {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
-    },
+        },
     credentials: 'include',
   });
   
