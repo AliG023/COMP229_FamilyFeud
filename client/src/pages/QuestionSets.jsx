@@ -48,9 +48,10 @@ export default function QuestionSets() {
     setAnswers(newAnswers);
   };
 
-  const addAnswer = () => {
-    setAnswers([...answers, { answer: '', points: '' }]);
-  };
+ const addAnswer = () => {
+  if (answers.length >= 8) return; // Stop at 8
+  setAnswers([...answers, { answer: '', points: '' }]);
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -115,7 +116,7 @@ export default function QuestionSets() {
 
   return (
     <div className="game_theme">
-    <div className="page page--stacked">
+    <div className="page page--wide question-sets-page">
       <header className="page__header">
         <p className="eyebrow">Survey Bank</p>
         <h2>Question Sets</h2>
@@ -134,7 +135,7 @@ export default function QuestionSets() {
         description="Add a new survey prompt, answers, and optional tags."
       >
         <form
-          className="form-grid form-grid--vertical"
+          className="form-grid form-grid--wide"
           onSubmit={handleSubmit}
         >
           <label>
@@ -171,6 +172,27 @@ export default function QuestionSets() {
             <p className="form-help">Add answers below. Points should mirror percentages from the survey source.</p>
           </div>
 
+          <div className="form-actions">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={addAnswer}
+              disabled={answers.length >= 8}
+            >
+              {answers.length >= 8 ? 'Max Answers Reached' : 'Add Answer'}
+            </button>
+            <button 
+              type="button" 
+              className="reset-button"
+              onClick={() => setAnswers([{ answer: '', points: '' }])}
+            >
+              Reset
+            </button>
+            <button type="submit" className="primary-button">
+              Save Question Set
+            </button>
+          </div>
+
           <div className="answer-list">
             {answers.map((answer, index) => (
               <div key={index} className="answer-list__row">
@@ -191,19 +213,6 @@ export default function QuestionSets() {
                 />
               </div>
             ))}
-          </div>
-
-          <div className="form-actions">
-            <button
-              type="button"
-              className="secondary-button"
-              onClick={addAnswer}
-            >
-              Add Another Answer
-            </button>
-            <button type="submit" className="primary-button">
-              Save Question Set
-            </button>
           </div>
         </form>
       </PageSection>
