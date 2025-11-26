@@ -4,14 +4,12 @@
 * @since 2025-11-13
 * @purpose Provides a user profile page where users can view and update their account details.
 */
+import { useState } from 'react';
 
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-
-import { PRIMARY_NAV_LINKS } from '../utils/navigation.js';
 import { apiFetch } from '../api/api.js';
 import { useAuth } from '../components/auth/AuthContext.js';
 
+import Sidebar from '../components/Sidebar.jsx';
 import PageSection from '../components/PageSection.jsx';
 import profileIcon from '../assets/Icon.png';
 
@@ -28,10 +26,6 @@ export default function UserProfile() {
         state: 'idle', 
         message: '',
     });
-    
-    const [menuOpen, setMenuOpen] = useState(false);
-    const toggleMenu = () => setMenuOpen((v) => !v);
-    const closeMenu = () => setMenuOpen(false);
 
     function handleChange(e) {
         const { name, value, files } = e.target;
@@ -80,20 +74,9 @@ export default function UserProfile() {
 
     return (
         <div className="game_theme">
-            <header className="landing-basic__chrome">
-                <button
-                type="button"
-                className="landing-basic__menu"
-                aria-label="Open navigation"
-                aria-controls="landing-drawer"
-                aria-expanded={menuOpen}
-                onClick={toggleMenu}
-                >
-                <span />
-                <span />
-                <span />
-                </button>
-            </header>
+            
+            <Sidebar /> 
+
             <div className='page page--auth'>
                 <header className='page__header'>
                     <p className='eyebrow'>Host Account</p>
@@ -172,26 +155,6 @@ export default function UserProfile() {
                     </div>
                 </PageSection>
             </div>
-            {/* Simple slide-out drawer for quick navigation while on the landing view. */}
-            {menuOpen ? <button className="landing-basic__backdrop" aria-label="Close menu" onClick={closeMenu} /> : null}
-            <nav
-                id="landing-drawer"
-                className={"landing-basic__drawer" + (menuOpen ? " landing-basic__drawer--open" : "")}
-                aria-hidden={!menuOpen}
-            >
-                <button type="button" className="landing-basic__drawer-close" onClick={closeMenu} aria-label="Close menu">
-                ×
-                </button>
-                <ul className="landing-basic__drawer-list">
-                {PRIMARY_NAV_LINKS.map(link => (
-                    <li key={link.path}>
-                    <Link to={link.path} onClick={closeMenu}>
-                        {link.label}
-                    </Link>
-                    </li>
-                ))}
-                </ul>
-            </nav>
         </div>
     ); 
 }

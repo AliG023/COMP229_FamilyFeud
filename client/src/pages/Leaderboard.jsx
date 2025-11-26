@@ -1,21 +1,15 @@
 import "../styles/Leaderboard.css";
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-
-import { PRIMARY_NAV_LINKS } from "../utils/navigation";
 import { getLeaderboard } from "../utils/leaderboardApi";
 
+import Sidebar from "../components/Sidebar";
 import backgroundImage from "../assets/FF-Leaderboard.png";
 
 export default function Leaderboard(props) {
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-    
-  const [menuOpen, setMenuOpen] = useState(false);
-  const toggleMenu = () => setMenuOpen((v) => !v);
-  const closeMenu = () => setMenuOpen(false);
 
   useEffect(() => {
     fetchLeaderboard();
@@ -67,21 +61,9 @@ export default function Leaderboard(props) {
 
   return (
     <div className="game_theme">
-      <header className="landing-basic__chrome">
-        <button
-          type="button"
-          className="landing-basic__menu"
-          aria-label="Open navigation"
-          aria-controls="landing-drawer"
-          aria-expanded={menuOpen}
-          onClick={toggleMenu}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
-      </header>
 
+      <Sidebar />
+      
       <div
         className="page page--centered leaderboard-page"
         style={{ backgroundImage: `url(${backgroundImage})` }}
@@ -121,26 +103,6 @@ export default function Leaderboard(props) {
           </div>
         </div>
       </div>
-      {/* Simple slide-out drawer for quick navigation while on the landing view. */}
-      {menuOpen ? <button className="landing-basic__backdrop" aria-label="Close menu" onClick={closeMenu} /> : null}
-      <nav
-        id="landing-drawer"
-        className={"landing-basic__drawer" + (menuOpen ? " landing-basic__drawer--open" : "")}
-        aria-hidden={!menuOpen}
-      >
-        <button type="button" className="landing-basic__drawer-close" onClick={closeMenu} aria-label="Close menu">
-          ×
-        </button>
-        <ul className="landing-basic__drawer-list">
-          {PRIMARY_NAV_LINKS.map(link => (
-            <li key={link.path}>
-              <Link to={link.path} onClick={closeMenu}>
-                {link.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
     </div>
   );
 }
