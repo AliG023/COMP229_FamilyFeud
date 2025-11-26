@@ -1,4 +1,4 @@
-// DataContext.js
+// accounts.context.jsx
 import React, { createContext, useContext, useState, useEffect } from "react";
 
 import { getAllUsers } from "../api/users.api";
