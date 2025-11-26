@@ -36,7 +36,7 @@ export default function Questions() {
 
   return (
     <div className="game_theme">
-    <div className="page page--wide question-page">
+    <div className="page page--wide questions-page">
       <header className="page__header">
         <p className="eyebrow">Question Bank</p>
         <h2>Questions</h2>
