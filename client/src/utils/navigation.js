@@ -74,7 +74,8 @@ export const AUTH_NAV_ITEMS = [
     },
 ];
 
-export const PRIMARY_NAV_LINKS = [HOME_NAV_ITEM, ...NAV_ITEMS, ...AUTH_NAV_ITEMS];
+export const PRIMARY_USER_NAV_LINKS = [HOME_NAV_ITEM, ...NAV_ITEMS];
+export const PRIMARY_ADMIN_NAV_LINKS = [HOME_NAV_ITEM, ...NAV_ITEMS];
 
 /**
  * Returns menu entries that should render as cards on the home dashboard.
