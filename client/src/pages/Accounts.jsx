@@ -43,7 +43,7 @@ export default function Accounts() {
                 <p>Create your first user account to manage your game content.</p>
               </div>
             ) : (
-              <div className="table-placeholder">
+              <div className="table-placeholder__accounts">
                 <div className="table-placeholder__row table-placeholder__row--head">
                   <span>Avatar</span>
                   <span>Username</span>
@@ -61,48 +61,55 @@ export default function Accounts() {
                     <span>{user.email}</span>
                     <span>{user.created ? new Date(user.created).toLocaleDateString() : 'Unknown'}</span>
                     <span className="table-placeholder__actions">
-                      <button
-                        type="button"
-                        className="link-button"
-                        onClick={() => navigate(`/users/${user._id || user.id}`)}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        className="link-button link-button--destructive"
-                        // onClick={async () => {
-                        //   if (window.confirm('Are you sure you want to delete this question set?')) {
-                        //     try {
-                        //       const response = await fetch(`/api/v1/question-sets/${set._id || set.id}`, {
-                        //         method: 'DELETE',
-                        //         credentials: 'include',
-                        //         headers: { 'Content-Type': 'application/json' },
-                        //       });
+                      {
+                        user.admin ? null
+                        : <>
+                          <button
+                            type="button"
+                            className="link-button"
+                            onClick={() => navigate(`/users/${user._id || user.id}`)}
+                          >
+                            Edit
+                          </button>
+                            
+                            <button
+                              type="button"
+                              className="link-button link-button--destructive"
+                              onClick={async () => {
+                                alert('User deletion is currently disabled for safety reasons.');
+                              //   if (window.confirm('Are you sure you want to delete this question set?')) {
+                              //     try {
+                              //       const response = await fetch(`/api/v1/question-sets/${set._id || set.id}`, {
+                              //         method: 'DELETE',
+                              //         credentials: 'include',
+                              //         headers: { 'Content-Type': 'application/json' },
+                              //       });
 
-                        //       if (!response.ok) {
-                        //         const errorData = await response.json().catch(() => ({}));
-                        //         throw new Error(errorData.message || 'Failed to delete question set');
-                        //       }
+                              //       if (!response.ok) {
+                              //         const errorData = await response.json().catch(() => ({}));
+                              //         throw new Error(errorData.message || 'Failed to delete question set');
+                              //       }
 
-                        //       // Refresh the list after deletion
-                        //       const updatedResponse = await fetch('/api/v1/question-sets', {
-                        //         credentials: 'include',
-                        //         headers: { 'Content-Type': 'application/json' },
-                        //       });
+                              //       // Refresh the list after deletion
+                              //       const updatedResponse = await fetch('/api/v1/question-sets', {
+                              //         credentials: 'include',
+                              //         headers: { 'Content-Type': 'application/json' },
+                              //       });
 
-                        //       if (updatedResponse.ok) {
-                        //         const updatedData = await updatedResponse.json();
-                        //         setQuestionSets(updatedData);
-                        //       }
-                        //     } catch (err) {
-                        //       alert(`Error: ${err.message}`);
-                        //     }
-                        //   }
-                        // }}
-                      >
-                        Delete
-                      </button>
+                              //       if (updatedResponse.ok) {
+                              //         const updatedData = await updatedResponse.json();
+                              //         setQuestionSets(updatedData);
+                              //       }
+                              //     } catch (err) {
+                              //       alert(`Error: ${err.message}`);
+                              //     }
+                              //   }
+                              }}
+                            >
+                              Delete
+                            </button>
+                        </>
+                      }
                     </span>
                   </div>
                 ))}

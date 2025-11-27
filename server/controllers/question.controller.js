@@ -9,7 +9,7 @@ const getAllQuestions = async (req, res) => {
     }
 };
 
-const getQuestion = async (req, res) => {
+const getQuestionById = async (req, res) => {
     try {
         const question = await QuestionModel.findById(req.params.id);
         if (!question) return res.status(404).json({ message: 'Question not found' });
@@ -110,7 +110,7 @@ const updateQuestion = async (req, res) => {
     }
 };
 
-const deleteQuestion = async (req, res) => {
+const deleteQuestionById = async (req, res) => {
     try {
         const deletedQuestion = await QuestionModel.findByIdAndDelete(req.params.id);
         if (!deletedQuestion) return res.status(404).json({ message: 'Question not found' });
@@ -120,5 +120,5 @@ const deleteQuestion = async (req, res) => {
     }
 };
 
-export default { getAllQuestions, getQuestion, getRandomQuestion, createQuestion, updateQuestion, deleteQuestion };
+export default { getAllQuestions, getQuestionById, getRandomQuestion, createQuestion, updateQuestion, deleteQuestionById };
 export {ROUND_BUCKETS};

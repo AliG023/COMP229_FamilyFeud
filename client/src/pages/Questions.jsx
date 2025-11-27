@@ -5,44 +5,228 @@
  * @purpose Manage questions for Family Feud rounds.
  */
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { useQuestions } from '../context/questions.context.jsx';
 
 import PageSection from '../components/PageSection.jsx';
 import Sidebar from '../components/Sidebar.jsx';
+import { createQuestion, editQuestion, deleteQuestionById } from '../api/questions.api.js';
+import VerifyAction from '../components/VerifyAction.jsx';
 
 export default function Questions() {
-  const navigate = useNavigate();
 
   const { isLoadingQuestions, questions, setQuestions } = useQuestions();
 
+  const [showWarning, setShowWarning] = useState(false);
+  const [event, setEvent] = useState(null);
+
+  const [action, setAction] = useState({prev: null, current: 'create'}); // 'create' or 'edit' or 'delete'
+  const [focusQuestion, setFocusQuestion] = useState({prev: {id: null, index: null}, current: {id: null, index: null}});
   const [answers, setAnswers] = useState([{ answer: '', points: '' }, { answer: '', points: '' }, { answer: '', points: '' }]);
 
-  const handleSubmit = async (e) => {
+  const handleCreateSubmit = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
 
     const newQuestion = {
-      title: formData.get('title'),
-      difficulty: formData.get('difficulty'),
+      text: formData.get('title'),
       isFastMoney: formData.get('roundType') === 'yes',
+      difficulty: formData.get('difficulty'),
       tags: formData.get('tags') ? formData.get('tags').split(',').map(tag => tag.trim()) : [],
-      answers: answers.filter(ans => ans.answer && ans.points)
+      answers: answers.filter(ans => ans.answer && ans.points).map(ans => ({
+        text: ans.answer,
+        points: Number(ans.points)
+      }))
     };
 
+    if (action.current === 'create') {
+      await createQuestion(newQuestion)
+      .then(data => data)
+      .then(createdQuestion => {
+          if (createdQuestion?.message) return;
+          const question = {
+              ...createdQuestion,
+              updatedAt: new Date().toISOString()
+          }
+          setQuestions([question, ...questions]);
+          
+      })
+      .catch(error => {
+          console.error('Error:', error);
+          return null;
+      });
+    }
+
+    const form = document.querySelector('form');
+    form.reset();
+
+    setAnswers([{ answer: '', points: '' }, { answer: '', points: '' }, { answer: '', points: '' }]);
+    setFocusQuestion({prev: focusQuestion.current, current: {id: null, index: null}});
+    setAction({ prev: action.current, current: 'create' });
+    
+    setEvent(null);
+    setShowWarning(false);
+  };
+  
+  const handleEditSubmit = async () => {
+    event?.preventDefault();
+    const formData = new FormData(event?.target);
+
+    const newQuestion = {
+      text: formData.get('title'),
+      isFastMoney: formData.get('roundType') === 'yes',
+      difficulty: formData.get('difficulty'),
+      tags: formData.get('tags') ? formData.get('tags').split(',').map(tag => tag.trim()) : [],
+      answers: answers.filter(ans => ans.answer && ans.points).map(ans => ({
+        text: ans.answer,
+        points: Number(ans.points)
+      }))
+    };
+
+    if (action.current === 'edit') {
+      await editQuestion(focusQuestion.current.id, newQuestion)
+      .then(data => data)
+      .then(editedQuestion => {
+        if (editedQuestion?.message) return;
+          const question = {
+            ...editedQuestion,
+            updatedAt: new Date().toISOString()
+          }
+          setQuestions(questions.map((q, index) => {
+            if (index === focusQuestion.current.index) return question;
+            return q;
+          }));
+      })
+      .catch(error => {
+          console.error('Error:', error);
+          return null;
+      });
+    }
+
+    const form = document.querySelector('form');
+    form.reset();
+
+    setAnswers([{ answer: '', points: '' }, { answer: '', points: '' }, { answer: '', points: '' }]);
+    setFocusQuestion({prev: focusQuestion.current, current: {id: null, index: null}});
+    setAction({ prev: action.current, current: 'create' });
+    
+    setEvent(null);
+    setShowWarning(false);
+  };
+
+  const handleDeleteSubmit = async () => {
+    event?.preventDefault();
+
+    await deleteQuestionById(focusQuestion.current.id)
+    .then(() => {
+        setQuestions(questions.filter(q => q._id !== focusQuestion.current.id && q.id !== focusQuestion.current.id));
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+
+    if (focusQuestion.current.id === focusQuestion.prev.id) {
+      setFocusQuestion({prev: {id: null, index: null}, current: {id: null, index: null}});
+      setAction({ prev: null, current: 'create' });
+
+      const form = document.querySelector('form');
+      form.reset();
+    } else {
+      setFocusQuestion({prev: {id: null, index: null}, current: focusQuestion.prev});
+      setAction({ prev: null, current: action.prev });
+    }
+
+    setEvent(null);
+    setShowWarning(false);
+  }
+  
+  const handleEdit = (question, index) => {
+    const text = document.querySelector('input[name="title"]');
+    const difficulty = document.querySelector('select[name="difficulty"]');
+    const roundTypeYes = document.querySelector('input[name="roundType"][value="yes"]');
+    const roundTypeNo = document.querySelector('input[name="roundType"][value="no"]');
+    const tags = document.querySelector('input[name="tags"]');
+
+    text.value = question.text;
+    difficulty.value = question.difficulty || 'easy';
+    if (question.isFastMoney) roundTypeYes.checked = true;
+    else roundTypeNo.checked = true;
+    tags.value = question.tags ? question.tags.join(', ') : '';
+    
+    setAnswers(question.answers.map(ans => ({ answer: ans.text, points: ans.points })));
+    
+    setFocusQuestion({ prev: focusQuestion.current, current: { id: question._id || question.id, index } });
+    setAction({ prev: action.current, current: 'edit' });
+
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (text && typeof text.focus === 'function') text.focus();
+    });
+  }
+
+  const handleReset = () => {
+    const form = document.querySelector('form');
+    form.reset();
+    setAnswers([{ answer: '', points: '' }, { answer: '', points: '' }, { answer: '', points: '' }]);
+    setFocusQuestion({prev: focusQuestion.current, current: {id: null, index: null}});
+    setAction({ prev: action.current, current: 'create' });
+  };
+
+  const handleVerifyCancel = () => {
+    if (action.current === 'delete') {
+      setAction({ prev: action.prev, current: action.prev });
+      setFocusQuestion({prev: focusQuestion.prev, current: focusQuestion.prev}) 
+    } 
+    setEvent(null);
+    setShowWarning(false);
+  }
+
+  const handleShowWarning = (e) => {
+    e.preventDefault();
+    if (action.current === 'edit' || (action.current === 'delete' && action.prev === 'edit')) {
+      setEvent(e);
+      setShowWarning(true);
+    } else {
+      handleCreateSubmit(e);
+    }
+  }
+  
+  const handleAnswerChange = (index, field, value) => {
+    const newAnswers = [...answers];
+    newAnswers[index][field] = value;
+    setAnswers(newAnswers);
   };
 
   const addAnswer = () => {
     if (answers.length < 8) setAnswers([...answers, { answer: '', points: '' }]);
   };
 
+  const removeAnswer = (index) => {
+    const newAnswers = [...answers];
+    newAnswers.splice(index, 1); // This should remove the specific index
+    setAnswers(newAnswers);
+  };
+
+  // TODO:
+  // Make prompt varifying delete action
+  // edit question will fill form above, and save will turn to update instead of create
+  // pagenate questions if more than 20
+
   return (
     <div className="game_theme">
 
       <Sidebar />
 
-      <div className="page page--wide question-page">
+      {
+        !showWarning ? null
+        : <VerifyAction 
+            action={action.current}
+            onConfirm={async () => action.current === 'edit' ? handleEditSubmit() : handleDeleteSubmit()} 
+            onCancel={() => handleVerifyCancel()}
+          />
+      }
+
+      <div className="page page--wide questions-page">
         <header className="page__header">
           <p className="eyebrow">Question Bank</p>
           <h2>Questions</h2>
@@ -50,68 +234,48 @@ export default function Questions() {
         </header>
 
         <PageSection
-          title="Create Question"
-          description="Add a new question, answers, and optional tags."
+          title={(action.current === 'edit' || (action.current === 'delete' && action.prev === 'edit')) ? "Edit Question" : "Create Question"}
+          description={(action.current === 'edit' || (action.current === 'delete' && action.prev === 'edit')) ? "Edit the question, answers, and tags." : "Add a new question, answers, and optional tags."}
         >
           <form
-            className="form-grid form-grid--vertical"
-            onSubmit={handleSubmit}
+            className="form-grid form-grid--wide"
+            onSubmit={(e) => handleShowWarning(e)}
           >
             <label>
               Question
               <input type="text" name="title" placeholder="What can you find in a kitchen?" required />
             </label>
 
-            <label>
-              Difficulty
-              <select name="difficulty" defaultValue="easy">
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-              </select>
-            </label>
+            <div className='form__input-container'>
+              <label className='form__difficulty'>
+                Difficulty
+                <select className='form__difficulty-select' name="difficulty" defaultValue="easy">
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </label>
+              
+              <label className='form__fast-money'>
+                Fast Money?
+                <div className="radio-group">
+                  <label className="radio-inline">
+                    <input type="radio" name="roundType" value="yes" /> Yes
+                  </label>
+                  <label className="radio-inline">
+                    <input type="radio" name="roundType" value="no" defaultChecked /> No
+                  </label>
+                </div>
+              </label>
+            </div>
 
-            <label>
-              Is this a Fast Money question?
-              <div className="radio-group">
-                <label className="radio-inline">
-                  <input type="radio" name="roundType" value="yes" /> Yes
-                </label>
-                <label className="radio-inline">
-                  <input type="radio" name="roundType" value="no" defaultChecked /> No
-                </label>
-              </div>
-            </label>
-
-            <label>
-              Tags (comma separated)
-              <input type="text" name="tags" placeholder="holiday, food" />
-            </label>
+              <label>
+                Tags (comma separated)
+                <input type="text" name="tags" placeholder="holiday, food" />
+              </label>
 
             <div className="form-grid__full">
               <p className="form-help">Add answers below. Points should mirror 100 points.</p>
-            </div>
-
-            <div className="answer-list">
-              {answers.map((answer, index) => (
-                <div key={index} className="answer-list__row">
-                  <input
-                    type="text"
-                    value={answer.answer}
-                    onChange={(e) => handleAnswerChange(index, 'answer', e.target.value)}
-                    placeholder={`Answer ${index + 1}`}
-                    required
-                  />
-                  <input
-                    type="number"
-                    value={answer.points}
-                    onChange={(e) => handleAnswerChange(index, 'points', e.target.value)}
-                    placeholder="Points"
-                    min="0"
-                    required
-                  />
-                </div>
-              ))}
             </div>
 
             <div className="form-actions">
@@ -119,12 +283,58 @@ export default function Questions() {
                 type="button"
                 className="secondary-button"
                 onClick={addAnswer}
+                disabled={answers.length >= 8}
               >
-                Add Another Answer
+                {answers.length >= 8 ? 'Max Answers Reached' : 'Add Answer'}
+              </button>
+              <button 
+                type="button" 
+                className="reset-button"
+                onClick={() => handleReset()}
+              >
+                Reset
               </button>
               <button type="submit" className="primary-button">
-                Save Question
+                {action.current === 'edit' ? "Save Question" : "Create Question"}
               </button>
+            </div>
+
+            <div className="answer-list">
+              {answers.map((answer, index) => (
+                <div key={index} className="answer-list__row">
+                    <input
+                      type="text"
+                      value={answer.answer}
+                      onChange={(e) => handleAnswerChange(index, 'answer', e.target.value)}
+                      placeholder={`Answer ${index + 1}`}
+                      required
+                    />
+                    <input
+                      type="number"
+                      value={answer.points}
+                      onChange={(e) => handleAnswerChange(index, 'points', e.target.value)}
+                      onInput={(e) => {
+                        if (e.target.value > 99) e.target.value = 99;
+                        if (e.target.value < 0) e.target.value = 0;
+                      }}
+                      placeholder="Points"
+                      min="0"
+                      max="99"
+                      required
+                    />
+                    {
+                      answers.length <= 3 ? null 
+                      : <button
+                        type="button"
+                        className="remove-answer-button"
+                        onClick={() => removeAnswer(index)} // This should be the current row's index
+                        aria-label="Remove answer"
+                      >
+                        ×
+                      </button>
+                    }
+                  </div>
+              ))}
             </div>
           </form>
         </PageSection>
@@ -141,62 +351,36 @@ export default function Questions() {
               <p>Create your first question to organize your game content.</p>
             </div>
           ) : (
-            <div className="table-placeholder">
+            <div className="table-placeholder__questions">
               <div className="table-placeholder__row table-placeholder__row--head">
                 <span>Question</span>
                 <span>Difficulty</span>
-                <span>Fast Money</span>
                 <span>Answers</span>
                 <span>Updated</span>
                 <span>Actions</span>
               </div>
-              {questions?.slice(0, 20).map((question) => (
+              {questions?.slice(0, 20).map((question, index) => (
                 <div key={question._id || question.id} className="table-placeholder__row">
                   <span>{question.text}</span>
                   <span>{question.difficulty || 'None'}</span>
-                  <span>{question?.isFastMoney ? "Yes" : "No"}</span>
                   <span>{question.answers?.length || 0}</span>
                   <span>{question.updatedAt ? new Date(question.updatedAt).toLocaleDateString() : 'Unknown'}</span>
                   <span className="table-placeholder__actions">
                     <button
                       type="button"
                       className="link-button"
-                      onClick={() => navigate(`/questions/${question._id || question.id}`)}
+                      onClick={() => handleEdit(question, index)}
                     >
                       Edit
                     </button>
                     <button
                       type="button"
                       className="link-button link-button--destructive"
-                      // onClick={async () => {
-                      //   if (window.confirm('Are you sure you want to delete this question set?')) {
-                      //     try {
-                      //       const response = await fetch(`/api/v1/question-sets/${set._id || set.id}`, {
-                      //         method: 'DELETE',
-                      //         credentials: 'include',
-                      //         headers: { 'Content-Type': 'application/json' },
-                      //       });
-
-                      //       if (!response.ok) {
-                      //         const errorData = await response.json().catch(() => ({}));
-                      //         throw new Error(errorData.message || 'Failed to delete question set');
-                      //       }
-
-                      //       // Refresh the list after deletion
-                      //       const updatedResponse = await fetch('/api/v1/question-sets', {
-                      //         credentials: 'include',
-                      //         headers: { 'Content-Type': 'application/json' },
-                      //       });
-
-                      //       if (updatedResponse.ok) {
-                      //         const updatedData = await updatedResponse.json();
-                      //         setQuestionSets(updatedData);
-                      //       }
-                      //     } catch (err) {
-                      //       alert(`Error: ${err.message}`);
-                      //     }
-                      //   }
-                      // }}
+                      onClick={() => {
+                        setShowWarning(true); 
+                        setAction({prev: action.current, current: 'delete'}); 
+                        setFocusQuestion({prev: focusQuestion.current, current: {id: question._id || question.id, index}});
+                      }}
                     >
                       Delete
                     </button>

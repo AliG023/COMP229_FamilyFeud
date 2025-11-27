@@ -280,10 +280,11 @@ button:focus-visible {
 }
 
 .table-placeholder__row {
-  display: grid;
+  display: flex;
   grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 0.75rem;
-  align-items: center;
+  /* align-items: center; */
+  text-align: center;
   padding: 0.75rem 1rem;
   border-radius: 12px;
   background: #fff;
@@ -304,7 +305,6 @@ button:focus-visible {
 
 .table-placeholder__actions {
   display: flex;
-  gap: 0.5rem;
 }
 
 .link-button {
@@ -1346,7 +1346,7 @@ button:focus-visible {
   color: #666;
 }
 
-.primary-button {
+/* .primary-button {
   background: #4CAF50;
   color: white;
   border: none;
@@ -1358,7 +1358,7 @@ button:focus-visible {
 
 .primary-button:hover {
   background: #45a049;
-}
+} */
 
 
 /* session.jsx */
@@ -1513,6 +1513,9 @@ button:focus-visible {
 
 .radio-group .radio-inline {
   cursor: pointer;
+  align-items: center;
+  min-width: 45px;
+  gap: 0.5rem;
 }
 
 .form-actions {

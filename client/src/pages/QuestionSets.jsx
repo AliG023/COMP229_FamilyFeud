@@ -18,7 +18,7 @@ export default function QuestionSets() {
   const [questionSets, setQuestionSets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [answers, setAnswers] = useState([{ answer: '', points: '' }]);
+  const [answers, setAnswers] = useState([{ answer: '', points: '' }, { answer: '', points: '' }, { answer: '', points: '' }]);
 
   // Fetch question sets from backend
   useEffect(() => {
@@ -58,6 +58,7 @@ export default function QuestionSets() {
   };
 
   const removeAnswer = (index) => {
+    if (answers.length <= 3) return; // Minimum of 3 answers
     const newAnswers = [...answers];
     newAnswers.splice(index, 1); // This should remove the specific index
     setAnswers(newAnswers);
@@ -116,15 +117,15 @@ export default function QuestionSets() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="game_theme" style={{ minHeight: '100vh' }}>
-        <div className="page page--stacked">
-          <div className="loading-message">Loading question sets...</div>
-        </div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="game_theme" style={{ minHeight: '100vh' }}>
+  //       <div className="page page--stacked">
+  //         <div className="loading-message">Loading question sets...</div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="game_theme">
@@ -199,7 +200,7 @@ export default function QuestionSets() {
               <button 
                 type="button" 
                 className="reset-button"
-                onClick={() => setAnswers([{ answer: '', points: '' }])}
+                onClick={() => setAnswers([{ answer: '', points: '' }, { answer: '', points: '' }, { answer: '', points: '' }])}
               >
                 Reset
               </button>
@@ -209,38 +210,44 @@ export default function QuestionSets() {
             </div>
 
             <div className="answer-list">
-              {answers.map((answer, index) => (
-                <div key={index} className="answer-list__row">
-                  <input
-                    type="text"
-                    value={answer.answer}
-                    onChange={(e) => handleAnswerChange(index, 'answer', e.target.value)}
-                    placeholder={`Answer ${index + 1}`}
-                    required
-                  />
-                  <input
-                    type="number"
-                    value={answer.points}
-                    onChange={(e) => handleAnswerChange(index, 'points', e.target.value)}
-                    onInput={(e) => {
-                      if (e.target.value > 99) e.target.value = 99;
-                      if (e.target.value < 0) e.target.value = 0;
-                    }}
-                    placeholder="Points"
-                    min="0"
-                    max="99"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="remove-answer-button"
-                    onClick={() => removeAnswer(index)} // This should be the current row's index
-                    aria-label="Remove answer"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
+              {
+                loading ? <div className="loading-message">Loading answers...</div>
+                : answers.map((answer, index) => (
+                  <div key={index} className="answer-list__row">
+                    <input
+                      type="text"
+                      value={answer.answer}
+                      onChange={(e) => handleAnswerChange(index, 'answer', e.target.value)}
+                      placeholder={`Answer ${index + 1}`}
+                      required
+                    />
+                    <input
+                      type="number"
+                      value={answer.points}
+                      onChange={(e) => handleAnswerChange(index, 'points', e.target.value)}
+                      onInput={(e) => {
+                        if (e.target.value > 99) e.target.value = 99;
+                        if (e.target.value < 0) e.target.value = 0;
+                      }}
+                      placeholder="Points"
+                      min="0"
+                      max="99"
+                      required
+                    />
+                    {
+                      answers.length <= 3 ? null 
+                      : <button
+                          type="button"
+                      className="remove-answer-button"
+                      onClick={() => removeAnswer(index)} // This should be the current row's index
+                      aria-label="Remove answer"
+                    >
+                      ×
+                    </button>
+                    }
+                  </div>
+                ))
+              }
             </div>
           </form>
         </PageSection>
@@ -249,74 +256,77 @@ export default function QuestionSets() {
           title="Existing Sets"
           description="Edit or retire question sets as your content evolves."
         >
-          {questionSets.length === 0 ? (
-            <div className="empty-state">
-              <p>No question sets found.</p>
-              <p>Create your first question set to organize your game content.</p>
-            </div>
-          ) : (
-            <div className="table-placeholder">
-              <div className="table-placeholder__row table-placeholder__row--head">
-                <span>Title</span>
-                <span>Category</span>
-                <span>Round Type</span>
-                <span>Answers</span>
-                <span>Updated</span>
-                <span>Actions</span>
+          {
+            loading ? <div className="loading-message">Loading question sets...</div>
+            : questionSets.length === 0 ? (
+              <div className="empty-state">
+                <p>No question sets found.</p>
+                <p>Create your first question set to organize your game content.</p>
               </div>
-              {questionSets.map((set) => (
-                <div key={set._id || set.id} className="table-placeholder__row">
-                  <span>{set.title}</span>
-                  <span>{set.category || 'None'}</span>
-                  <span>{set.roundType}</span>
-                  <span>{set.answers?.length || 0}</span>
-                  <span>{set.updatedAt ? new Date(set.updatedAt).toLocaleDateString() : 'Unknown'}</span>
-                  <span className="table-placeholder__actions">
-                    <button
-                      type="button"
-                      className="link-button"
-                      onClick={() => navigate(`/question-sets/${set._id || set.id}`)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      className="link-button link-button--destructive"
-                      onClick={async () => {
-                        if (window.confirm('Are you sure you want to delete this question set?')) {
-                          try {
-                            const response = await fetch(`/api/v1/question-sets/${set._id || set.id}`, {
-                              method: 'DELETE',
-                              credentials: 'include',
-                              headers: { 'Content-Type': 'application/json' },
-                            });
-
-                            if (!response.ok) {
-                              const errorData = await response.json().catch(() => ({}));
-                              throw new Error(errorData.message || 'Failed to delete question set');
-                            }
-
-                            // Refresh the list after deletion
-                            const updatedResponse = await fetch('/api/v1/question-sets', {
-                              credentials: 'include',
-                              headers: { 'Content-Type': 'application/json' },
-                            });
-
-                            if (updatedResponse.ok) {
-                              const updatedData = await updatedResponse.json();
-                              setQuestionSets(updatedData);
-                            }
-                          } catch (err) {
-                            alert(`Error: ${err.message}`);
-                          }
-                        }
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </span>
+            ) : (
+              <div className="table-placeholder">
+                <div className="table-placeholder__row table-placeholder__row--head">
+                  <span>Title</span>
+                  <span>Category</span>
+                  <span>Round Type</span>
+                  <span>Answers</span>
+                  <span>Updated</span>
+                  <span>Actions</span>
                 </div>
-              ))}
+                {questionSets.map((set) => (
+                  <div key={set._id || set.id} className="table-placeholder__row">
+                    <span>{set.title}</span>
+                    <span>{set.category || 'None'}</span>
+                    <span>{set.roundType}</span>
+                    <span>{set.answers?.length || 0}</span>
+                    <span>{set.updatedAt ? new Date(set.updatedAt).toLocaleDateString() : 'Unknown'}</span>
+                    <span className="table-placeholder__actions">
+                      <button
+                        type="button"
+                        className="link-button"
+                        onClick={() => navigate(`/question-sets/${set._id || set.id}`)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        className="link-button link-button--destructive"
+                        onClick={async () => {
+                          if (window.confirm('Are you sure you want to delete this question set?')) {
+                            try {
+                              const response = await fetch(`/api/v1/question-sets/${set._id || set.id}`, {
+                                method: 'DELETE',
+                                credentials: 'include',
+                                headers: { 'Content-Type': 'application/json' },
+                              });
+
+                              if (!response.ok) {
+                                const errorData = await response.json().catch(() => ({}));
+                                throw new Error(errorData.message || 'Failed to delete question set');
+                              }
+
+                              // Refresh the list after deletion
+                              const updatedResponse = await fetch('/api/v1/question-sets', {
+                                credentials: 'include',
+                                headers: { 'Content-Type': 'application/json' },
+                              });
+
+                              if (updatedResponse.ok) {
+                                const updatedData = await updatedResponse.json();
+                                setQuestionSets(updatedData);
+                              }
+                            } catch (err) {
+                              alert(`Error: ${err.message}`);
+                            }
+                          }
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </span>
+                  </div>
+                ))
+              }
             </div>
           )}
         </PageSection>
