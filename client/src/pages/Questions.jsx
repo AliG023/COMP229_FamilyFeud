@@ -356,7 +356,7 @@ export default function Questions() {
         </PageSection>
 
         <PageSection
-          title="Existing Questions"
+          title={`Existing Questions - ${filteredQuestions.length}`}
           description="Edit or remove questions."
           actions={<SearchBar placeholder="Search questions..." data={questions} setData={setFilteredQuestions} />}
         >
@@ -376,7 +376,7 @@ export default function Questions() {
                 <span>Updated</span>
                 <span>Actions</span>
               </div>
-              {filteredQuestions?.slice(0, 20).map((question, index) => (
+              {filteredQuestions?.slice(0, 10).map((question, index) => (
                 <div key={question._id || question.id} className="table-placeholder__row">
                   <span>{question.text}</span>
                   <span>{question.difficulty || 'None'}</span>
