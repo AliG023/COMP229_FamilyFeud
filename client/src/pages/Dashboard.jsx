@@ -81,13 +81,13 @@ export default function Dashboard() {
     fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="game_theme" style={{ minHeight: '100vh' }}>
-        <div className="page page--stacked">Loading dashboard...</div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="game_theme" style={{ minHeight: '100vh' }}>
+  //       <div className="page page--stacked">Loading dashboard...</div>
+  //     </div>
+  //   );
+  // }
   
   return (
     <div className="game_theme">
@@ -158,23 +158,26 @@ export default function Dashboard() {
                 <span>Tags</span>
                 <span>Actions</span>
               </div>
-              {questionSets.map((set) => (
-                <div key={set._id} className="table-placeholder__row">
-                  <span>{set.title}</span>
-                  <span>{set.roundType}</span>
-                  <span>{set.questions?.length || 0}</span>
-                  <span>{set.tags?.join(', ') || 'None'}</span>
-                  <span>
-                    <button
-                      type="button"
-                      className="link-button"
-                      onClick={() => navigate(`/question-sets/${set._id}`)}
-                    >
-                      View
-                    </button>
-                  </span>
-                </div>
-              ))}
+              {
+                loading ? <div className="loading-message">Loading question sets...</div>
+                : questionSets.map((set) => (
+                  <div key={set._id} className="table-placeholder__row">
+                    <span>{set.title}</span>
+                    <span>{set.roundType}</span>
+                    <span>{set.questions?.length || 0}</span>
+                    <span>{set.tags?.join(', ') || 'None'}</span>
+                    <span>
+                      <button
+                        type="button"
+                        className="link-button"
+                        onClick={() => navigate(`/question-sets/${set._id}`)}
+                      >
+                        View
+                      </button>
+                    </span>
+                  </div>
+                ))
+              }
             </div>
           )}
         </PageSection>
@@ -206,24 +209,27 @@ export default function Dashboard() {
                 <span>Updated</span>
                 <span>Actions</span>
               </div>
-              {sessions.map((session) => (
-                <div key={session.id} className="table-placeholder__row">
-                  <span>{session.accessCode}</span>
-                  <span>{session.status}</span>
-                  <span>{session.questionSetId || 'None'}</span>
-                  <span>{session.teams?.map((team) => team.name).join(' vs ') || 'None'}</span>
-                  <span>{session.updatedAt ? new Date(session.updatedAt).toLocaleTimeString() : 'Never'}</span>
-                  <span>
-                    <button
-                      type="button"
-                      className="link-button"
-                      onClick={() => navigate(`/sessions/${session.id}`)}
-                    >
-                      Open
-                    </button>
-                  </span>
-                </div>
-              ))}
+              {
+                loading ? <div className="loading-message">Loading sessions...</div>
+                : sessions.map((session) => (
+                  <div key={session.id} className="table-placeholder__row">
+                    <span>{session.accessCode}</span>
+                    <span>{session.status}</span>
+                    <span>{session.questionSetId || 'None'}</span>
+                    <span>{session.teams?.map((team) => team.name).join(' vs ') || 'None'}</span>
+                    <span>{session.updatedAt ? new Date(session.updatedAt).toLocaleTimeString() : 'Never'}</span>
+                    <span>
+                      <button
+                        type="button"
+                        className="link-button"
+                        onClick={() => navigate(`/sessions/${session.id}`)}
+                      >
+                        Open
+                      </button>
+                    </span>
+                  </div>
+                ))
+              }
             </div>
           )}
         </PageSection>

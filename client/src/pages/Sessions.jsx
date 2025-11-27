@@ -91,13 +91,13 @@ export default function Sessions() {
     return foundSet ? foundSet.title : 'Unknown Set';
   };
 
-  if (loading) {
-    return (
-      <div className="game_theme" style={{ minHeight: '100vh' }}>
-        <div className="page page--stacked">Loading sessions...</div>
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="game_theme" style={{ minHeight: '100vh' }}>
+  //       <div className="page page--stacked">Loading sessions...</div>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="game_theme">
@@ -118,84 +118,87 @@ export default function Sessions() {
         >
           {sessions && Array.isArray(sessions) ? (
             <div className="sessions-grid">
-              {sessions.map((session) => {
-                const questionSetTitle = getQuestionSetTitle(session.questionSetId);
+              {
+                loading ? <p>Loading sessions...</p>
+                : sessions.map((session) => {
+                  const questionSetTitle = getQuestionSetTitle(session.questionSetId);
 
-                return (
-                  <article key={session.id} className="session-card">
-                    <header className="session-card__header">
-                      <div>
-                        <p className="session-card__code">Code: {session.accessCode}</p>
-                        <h3>{questionSetTitle}</h3>
-                      </div>
-                      <span className={`session-card__status status-${session.status}`}>
-                        {session.status}
-                      </span>
-                    </header>
+                  return (
+                    <article key={session.id} className="session-card">
+                      <header className="session-card__header">
+                        <div>
+                          <p className="session-card__code">Code: {session.accessCode}</p>
+                          <h3>{questionSetTitle}</h3>
+                        </div>
+                        <span className={`session-card__status status-${session.status}`}>
+                          {session.status}
+                        </span>
+                      </header>
 
-                    <dl className="session-card__meta">
-                      <div>
-                        <dt>Round</dt>
-                        <dd>{session.currentRound !== undefined ? session.currentRound + 1 : 'Not started'}</dd>
-                      </div>
-                      <div>
-                        <dt>Teams</dt>
-                        <dd>
-                          {session.teams && session.teams.length > 0
-                            ? session.teams.map((team) => `${team.name} (${team.score || 0})`).join(' vs ')
-                            : 'No teams'}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt>Updated</dt>
-                        <dd>
-                          {session.updatedAt
-                            ? new Date(session.updatedAt).toLocaleString()
-                            : 'Never'}
-                        </dd>
-                      </div>
-                    </dl>
+                      <dl className="session-card__meta">
+                        <div>
+                          <dt>Round</dt>
+                          <dd>{session.currentRound !== undefined ? session.currentRound + 1 : 'Not started'}</dd>
+                        </div>
+                        <div>
+                          <dt>Teams</dt>
+                          <dd>
+                            {session.teams && session.teams.length > 0
+                              ? session.teams.map((team) => `${team.name} (${team.score || 0})`).join(' vs ')
+                              : 'No teams'}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Updated</dt>
+                          <dd>
+                            {session.updatedAt
+                              ? new Date(session.updatedAt).toLocaleString()
+                              : 'Never'}
+                          </dd>
+                        </div>
+                      </dl>
 
-                    <div className="session-card__actions">
-                      <button
-                        type="button"
-                        className="action-button"
-                        onClick={() => handleAction(session.id, 'reveal-answer')}
-                      >
-                        Reveal Answer
-                      </button>
-                      <button
-                        type="button"
-                        className="action-button"
-                        onClick={() => handleAction(session.id, 'add-strike')}
-                      >
-                        Add Strike
-                      </button>
-                      <button
-                        type="button"
-                        className="action-button"
-                        onClick={() => handleAction(session.id, 'award-points')}
-                      >
-                        Award Points
-                      </button>
-                      <button
-                        type="button"
-                        className="action-button"
-                        onClick={() => handleAction(session.id, 'end-round')}
-                      >
-                        End Round
-                      </button>
-                      <button
-                        type="button"
-                        className="action-button view-button"
-                        onClick={() => navigate(`/sessions/${session.id}`)}
-                      >
-                        View Details
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
+                      <div className="session-card__actions">
+                        <button
+                          type="button"
+                          className="action-button"
+                          onClick={() => handleAction(session.id, 'reveal-answer')}
+                        >
+                          Reveal Answer
+                        </button>
+                        <button
+                          type="button"
+                          className="action-button"
+                          onClick={() => handleAction(session.id, 'add-strike')}
+                        >
+                          Add Strike
+                        </button>
+                        <button
+                          type="button"
+                          className="action-button"
+                          onClick={() => handleAction(session.id, 'award-points')}
+                        >
+                          Award Points
+                        </button>
+                        <button
+                          type="button"
+                          className="action-button"
+                          onClick={() => handleAction(session.id, 'end-round')}
+                        >
+                          End Round
+                        </button>
+                        <button
+                          type="button"
+                          className="action-button view-button"
+                          onClick={() => navigate(`/sessions/${session.id}`)}
+                        >
+                          View Details
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })
+              }
             </div>
           ) : (
             <div className="empty-state">

@@ -7,12 +7,12 @@ const router = express.Router();
 
 // Protected routes
 router.get('/random', questionController.getRandomQuestion);
-router.get('/all/:id', questionController.getQuestion);
+router.get('/all/:id', questionController.getQuestionById);
 
 // Authorization middleware to ensure user can only modify their own questions
 router.get('/all', authMiddleware.requireSignin, authMiddleware.hasAuthorization, questionController.getAllQuestions);
-router.post('/', authMiddleware.requireSignin, authMiddleware.hasAuthorization, questionController.createQuestion);
-router.put('/:id', authMiddleware.requireSignin, authMiddleware.hasAuthorization, questionController.updateQuestion);
-router.delete('/:id', authMiddleware.requireSignin, authMiddleware.hasAuthorization, questionController.deleteQuestion);
+router.post('/all', authMiddleware.requireSignin, authMiddleware.hasAuthorization, questionController.createQuestion);
+router.put('/all/:id', authMiddleware.requireSignin, authMiddleware.hasAuthorization, questionController.updateQuestion);
+router.delete('/all/:id', authMiddleware.requireSignin, authMiddleware.hasAuthorization, questionController.deleteQuestionById);
 
 export default router;

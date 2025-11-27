@@ -1,12 +1,15 @@
 import mongoose from 'mongoose';
 
 const AnswerSchema = new mongoose.Schema({
-    answer: { type: String, required: true, trim: true }, 
+    text: { type: String, required: true, trim: true }, 
     points: { type: Number, required: true }
 });
 
 const QuestionSchema = new mongoose.Schema({
-    question: { type: String, trim: true, required: "Question is required" },
+    text: { type: String, trim: true, required: "Question is required" },
+    isFastMoney: { type: Boolean, default: false },
+    difficulty: { type: String, enum: ['easy', 'medium', 'hard'], default: 'medium' },
+    tags: { type: [String], default: [] },
     answers: [ AnswerSchema ]
 });
 
