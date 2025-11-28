@@ -10,7 +10,7 @@ import PageSection from "./PageSection";
 export default function VerifyAction({ action, text, image, onConfirm, onCancel }) {
     
     return (
-        <div className="notification-backdrop" onClick={(e) => e.stopPropagation()}>
+        <div className="warning-backdrop" onClick={(e) => e.stopPropagation()}>
             <div className="notification-container">
                 <PageSection title="Confirm Action">
                     {image && <img src={image} alt="Item to verify" className="notification-avatar" />}

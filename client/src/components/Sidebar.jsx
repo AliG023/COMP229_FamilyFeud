@@ -20,8 +20,30 @@ export default function Sidebar() {
     const navigate = useNavigate();
     
     const [menuOpen, setMenuOpen] = useState(true);
-    const toggleMenu = () => setMenuOpen((v) => !v);
-    const closeMenu = () => setMenuOpen(false);
+    const toggleMenu = () => {
+        const toggle = !menuOpen;
+        const drawer = document.getElementById("landing-drawer");
+
+        if (toggle) {
+            drawer.removeAttribute("inert");
+            drawer.setAttribute("aria-hidden", "false");
+            drawer.querySelector(".landing-basic__drawer-close").focus();
+        } else {
+            drawer.setAttribute("inert", "");
+            drawer.setAttribute("aria-hidden", "true");
+        }
+
+        setMenuOpen(toggle);
+    }
+
+    const closeMenu = () => {
+        const drawer = document.getElementById("landing-drawer");
+
+        drawer.setAttribute("inert", "");
+        drawer.setAttribute("aria-hidden", "true");
+
+        setMenuOpen(false);
+    }
 
     const handleSignOut = async () => {
         await signOut();
@@ -50,7 +72,6 @@ export default function Sidebar() {
             <nav
                 id="landing-drawer"
                 className={"landing-basic__drawer" + (menuOpen ? " landing-basic__drawer--open" : "")}
-                aria-hidden={!menuOpen}
             >
                 <button type="button" className="landing-basic__drawer-close" onClick={closeMenu} aria-label="Close menu">
                     ×

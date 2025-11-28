@@ -48,7 +48,7 @@ export default function PlayerJoin() {
                 placeholder="Team Captain"
               />
             </label>
-            <button type="submit">Request Entry</button>
+            <button type="submit" className="primary-button">Request Entry</button>
           </form>
           {/* TODO (Backend Team): POST /api/player-sessions/join should validate code and return player token. */}
         </PageSection>
