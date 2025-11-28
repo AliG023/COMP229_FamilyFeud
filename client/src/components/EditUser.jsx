@@ -69,6 +69,9 @@ export default function EditUser({ user, setUser, onConfirm, onCancel }) {
         if (formPassword.password !== formPassword.checkPassword) {
             setStatus({ state: 'error', message: 'Passwords do not match.' });
             return;
+        } else if (formPassword.password.length > 0 && formPassword.password.length < 6) {
+            setStatus({ state: 'error', message: 'Password must be at least 6 characters.' });
+            return;
         }
 
         setStatus(defaultStatus);
