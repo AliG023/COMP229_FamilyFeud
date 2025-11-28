@@ -17,6 +17,7 @@ import VerifyAction from '../components/VerifyAction.jsx';
 import NotificationAction from '../components/NotificationAction.jsx';
 
 import logo from '/Family_Feud_Logo.png';
+import EditUser from '../components/EditUser.jsx';
 
 export default function Accounts() {
 
@@ -28,7 +29,10 @@ export default function Accounts() {
   }, [isLoadingAccounts]);
 
   const [action, setAction] = useState('');
+  const [editUser, setEditUser] = useState({});
   const [focusedUser, setFocusedUser] = useState({});
+
+  const [showEditUser, setShowEditUser] = useState(false);
 
   const [isError, setIsError] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
@@ -44,20 +48,23 @@ export default function Accounts() {
 
   const handleEdit = (user) => {
     setAction('edit');
+    setEditUser(user);
     setFocusedUser(user);
-    setShowWarning(true);
+    setShowEditUser(true);
   }
 
   const handleEditSubmit = async (e) => {
     e?.preventDefault();
 
     const updatedUser = new FormData();
-    updatedUser.append('username', focusedUser.username);
-    updatedUser.append('email', focusedUser.email);
-    updatedUser.append('image', focusedUser.image);
+    updatedUser.append('username', editUser.username);
+    updatedUser.append('email', editUser.email);
+    updatedUser.append('bio', editUser.bio);
+    updatedUser.append('image', editUser.image);
+    if (editUser.password && editUser.password.length >= 6) updatedUser.append('password', editUser.password);
 
     await updateUserById(focusedUser._id, updatedUser)
-    .then((user) => {
+    .then(user => {
       setUsers(users.map(u => {
         if (u._id === focusedUser._id) return user;
         return u;
@@ -73,9 +80,14 @@ export default function Accounts() {
     })
     .finally(() => {
       setShowWarning(false);
+      setShowEditUser(false);
       if (isError) setShowError(true);
       else setShowSuccess(true);
     });
+
+      setShowWarning(false);
+      setShowEditUser(false);
+      setShowSuccess(true);
 
   }
 
@@ -98,12 +110,29 @@ export default function Accounts() {
       });
   }
 
+  const handleVerify = (e) => {
+    e.preventDefault();
+
+    setShowWarning(true);
+  }
+
+  const handleEditCancel = (e) => {
+    e.preventDefault();
+
+    setShowEditUser(false);
+    setFocusedUser({});
+    setAction('');
+  }
+
   const handleVerifyCancel = (e) => {
     e.preventDefault();
 
+    if (action !== 'edit') {
+      setFocusedUser({});
+      setAction('');
+    }
+    
     setShowWarning(false);
-    setFocusedUser({});
-    setAction('');
   }
 
   const handleNotification = (e) => {
@@ -130,6 +159,16 @@ export default function Accounts() {
       }
 
       {
+        !showEditUser ? null
+        : <EditUser 
+            user={editUser}
+            setUser={setEditUser}
+            onConfirm={(e) => handleVerify(e)}
+            onCancel={(e) => handleEditCancel(e)}
+          />
+      }
+
+      {
         showSuccess ? <NotificationAction type="Success" action={action === 'delete' ? "deleted" : "edited"} text={focusedUser.username} onClose={(e) => handleNotification(e)} />
         : showError ? <NotificationAction type="Error" action={action === 'delete' ? "deleted" : "edited"} text={focusedUser.username} onClose={(e) => handleNotification(e)} />
         : null
@@ -145,7 +184,7 @@ export default function Accounts() {
         </header>
 
         <PageSection
-          title="All User Accounts"
+          title={`All Accounts - ${filteredUsers.length}`}
           description="Edit or remove user accounts."
           actions={<SearchBar placeholder="Search users..." type="accounts"  data={users} setData={setFilteredUsers} />}
         >

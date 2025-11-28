@@ -126,7 +126,7 @@ export default function Dashboard() {
         <PageSection
           title="Question Sets"
           description="Manage your question sets."
-          actions={<button type="button" onClick={() => navigate('/question-sets/create')}>Create New Set</button>}
+          actions={questionSets.length === 0 ? null : <button type="button" className='primary-button' onClick={() => navigate('/question-sets/create')}>Create New Set</button>}
         >
           {questionSets.length === 0 ? (
             <div className="empty-state">
@@ -176,53 +176,55 @@ export default function Dashboard() {
         <PageSection
           title="Active Sessions"
           description="Monitor lobbies and live games."
-          actions={<button type="button" onClick={() => navigate('/sessions/create')}>Create Session</button>}
+          actions={sessions.length === 0 ? null : <button type="button" className='primary-button' onClick={() => navigate('/sessions/create')}>Create Session</button>}
         >
-          {sessions.length === 0 ? (
-            <div className="empty-state">
-              <p>No active sessions.</p>
-              <p>Create a new session to start a game.</p>
-              <button
-                type="button"
-                className="primary-button"
-                onClick={() => navigate('/sessions/create')}
-              >
-                Create New Session
-              </button>
-            </div>
-          ) : (
-            <div className="table-placeholder">
-              <div className="table-placeholder__row table-placeholder__row--head">
-                <span>Code</span>
-                <span>Status</span>
-                <span>Question Set</span>
-                <span>Teams</span>
-                <span>Updated</span>
-                <span>Actions</span>
+          {
+            sessions.length === 0 ? (
+              <div className="empty-state">
+                <p>No active sessions.</p>
+                <p>Create a new session to start a game.</p>
+                <button
+                  type="button"
+                  className="primary-button"
+                  onClick={() => navigate('/sessions/create')}
+                >
+                  Create New Session
+                </button>
               </div>
-              {
-                loading ? <div className="loading-message">Loading sessions...</div>
-                : sessions.map((session) => (
-                  <div key={session.id} className="table-placeholder__row">
-                    <span>{session.accessCode}</span>
-                    <span>{session.status}</span>
-                    <span>{session.questionSetId || 'None'}</span>
-                    <span>{session.teams?.map((team) => team.name).join(' vs ') || 'None'}</span>
-                    <span>{session.updatedAt ? new Date(session.updatedAt).toLocaleTimeString() : 'Never'}</span>
-                    <span>
-                      <button
-                        type="button"
-                        className="link-button"
-                        onClick={() => navigate(`/sessions/${session.id}`)}
-                      >
-                        Open
-                      </button>
-                    </span>
-                  </div>
-                ))
-              }
-            </div>
-          )}
+            ) : (
+              <div className="table-placeholder">
+                <div className="table-placeholder__row table-placeholder__row--head">
+                  <span>Code</span>
+                  <span>Status</span>
+                  <span>Question Set</span>
+                  <span>Teams</span>
+                  <span>Updated</span>
+                  <span>Actions</span>
+                </div>
+                {
+                  loading ? <div className="loading-message">Loading sessions...</div>
+                  : sessions.map((session) => (
+                    <div key={session.id} className="table-placeholder__row">
+                      <span>{session.accessCode}</span>
+                      <span>{session.status}</span>
+                      <span>{session.questionSetId || 'None'}</span>
+                      <span>{session.teams?.map((team) => team.name).join(' vs ') || 'None'}</span>
+                      <span>{session.updatedAt ? new Date(session.updatedAt).toLocaleTimeString() : 'Never'}</span>
+                      <span>
+                        <button
+                          type="button"
+                          className="link-button"
+                          onClick={() => navigate(`/sessions/${session.id}`)}
+                        >
+                          Open
+                        </button>
+                      </span>
+                    </div>
+                  ))
+                }
+              </div>
+            )
+          }
         </PageSection>
 
         <PageSection

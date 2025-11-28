@@ -41,14 +41,31 @@ const createUser = async (req, res) => {
 
 const updateUserById = async (req, res) => {
     try {
-        if (req.file) req.body.image = { data: await bufferImage(req.file), contentType: req.file.mimetype };
+        let buffer;
+
+        if (req.file) buffer = await bufferImage(req.file);
         
-        let updatedUser = await UserModel.findByIdAndUpdate(req.params.id, req.body, { new: true });
+        let updatedUser = await UserModel.findByIdAndUpdate(
+            req.params.id, 
+            {
+                ...req.body,
+                image: buffer ? { data: buffer, contentType: req.file.mimetype } : undefined
+            },
+            { new: true }
+        );
+
         if (!updatedUser) return res.status(404).json({ message: 'User not found' });
 
-        if (updatedUser.image) updatedUser = {...updatedUser.toObject(), image: `data:${updatedUser.image.contentType};base64,${updatedUser.image.data.toString('base64')}`}
+        const formattedUser = updatedUser.toObject();
+
+        const user = {
+            ...formattedUser,
+            image: formattedUser.image?.data 
+                ? `data:${formattedUser.image.contentType};base64,${formattedUser.image.data.toString('base64')}` 
+                : null
+        }
         
-        res.status(200).json(updatedUser);
+        res.status(200).json(user);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

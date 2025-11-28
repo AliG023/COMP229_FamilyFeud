@@ -105,7 +105,7 @@ export default function Sessions() {
         <PageSection
           title="Session Lobby"
           description="Use this control panel to advance rounds and manage teams."
-          actions={<button type="button" onClick={() => navigate('/sessions/create')}>Create New Session</button>}
+          actions={<button type="button" className='primary-button' onClick={() => navigate('/sessions/create')}>Create New Session</button>}
         >
           {sessions && Array.isArray(sessions) ? (
             <div className="sessions-grid">

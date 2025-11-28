@@ -15,6 +15,7 @@ const UserSchema = new mongoose.Schema({
         match: [/.+\@.+\..+/, 'Please fill a valid email address'],
         required: "Email is required"
     },
+    bio: { type: String, default: '' },
     image: {
         data: { type: Buffer, default: null },
         contentType: { type: String, default: null }
@@ -29,6 +30,27 @@ UserSchema.pre('save', async function(next) {
     if (this.isModified('password') || this.isNew) this.password = await bcrypt.hash(this.password, 10);
     this.updated = new Date();
     next();
+});
+
+UserSchema.pre('findOneAndUpdate', async function(next) {
+    try {
+        const update = this.getUpdate();
+        if (!update) return next();
+
+        const newPassword = update.password || (update.$set && update.$set.password);
+        if (newPassword && typeof newPassword === 'string' && newPassword.length) {
+            const hashed = await bcrypt.hash(newPassword, 10);
+            if (update.$set) update.$set.password = hashed;
+            else update.password = hashed;
+        }
+
+        if (update.$set) update.$set.updated = new Date();
+        else update.updated = new Date();
+
+        next();
+    } catch (err) {
+        next(err);
+    }
 });
 
 UserSchema.methods.comparePassword = async function(password) {
