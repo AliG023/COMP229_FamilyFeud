@@ -2,12 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { apiFetch } from '../api/api.js';
+import { useQuestions } from '../context/questions.context.jsx';
 
 import PageSection from '../components/PageSection.jsx';
 import logo from '/Family_Feud_Logo.png';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+
+  const { totalQuestionCount } = useQuestions();
 
   const [questionSets, setQuestionSets] = useState([]);
   const [sessions, setSessions] = useState([]);
@@ -17,7 +20,7 @@ export default function Dashboard() {
     totalSets: 0,
     doubleTriple: 0,
     holiday: 0,
-    totalQuestions: 0
+    totalQuestions: totalQuestionCount
   });
 
   useEffect(() => {
@@ -42,7 +45,7 @@ export default function Dashboard() {
             totalSets: setsData.length,
             doubleTriple: setsData.filter(set => set.roundType !== 'single').length,
             holiday: setsData.filter(set => set.tags?.includes('holiday')).length,
-            totalQuestions: setsData.reduce((sum, set) => sum + (set.questions?.length || 0), 0)
+            totalQuestions: totalQuestionCount
           };
           setStats(calculatedStats);
           setQuestionSets(setsData);

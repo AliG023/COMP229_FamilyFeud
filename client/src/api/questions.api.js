@@ -17,6 +17,23 @@ export const getQuestions = async () => {
     return response;
 };
 
+export const getTotalQuestionCount = async () => {
+    const response =  await apiFetch(`/question/count`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => data)
+    .catch(error => {
+        console.error('Error:', error);
+        return 0;
+    });
+
+    return response;
+};
+
 export const getQuestionById = async (id) => {
     const response =  await apiFetch(`/question/all/${id}`, {
         method: 'GET',

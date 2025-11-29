@@ -6,8 +6,9 @@ import questionController from '../../controllers/question.controller.js';
 const router = express.Router();
 
 // Protected routes
-router.get('/random', questionController.getRandomQuestion);
-router.get('/all/:id', questionController.getQuestionById);
+router.get('/random', authMiddleware.requireSignin, questionController.getRandomQuestion);
+router.get('/count', authMiddleware.requireSignin, questionController.getTotalQuestionCount);
+router.get('/all/:id', authMiddleware.requireSignin, questionController.getQuestionById);
 
 // Authorization middleware to ensure user can only modify their own questions
 router.get('/all', authMiddleware.requireSignin, authMiddleware.hasAuthorization, questionController.getAllQuestions);

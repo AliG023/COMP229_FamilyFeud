@@ -1,7 +1,7 @@
 // DataContext.js
 import React, { createContext, useContext, useState, useEffect } from "react";
 
-import { getQuestions } from "../api/questions.api";
+import { getQuestions, getTotalQuestionCount } from "../api/questions.api";
 import { useAuth } from "../components/auth/AuthContext";
 
 // Context
@@ -14,6 +14,7 @@ export const QuestionsProvider = ({ children }) => {
 
     const [isLoadingQuestions, setIsLoadingQuestions] = useState(true);
     const [questions, setQuestions] = useState([]);
+    const [totalQuestionCount, setTotalQuestionCount] = useState(0);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -24,8 +25,17 @@ export const QuestionsProvider = ({ children }) => {
         if (user?.admin) fetchData();
     }, [user]);
 
+    useEffect(() => {
+        const fetchTotalCount = async () => {
+            const count = await getTotalQuestionCount();
+            setTotalQuestionCount(count);
+            setIsLoadingQuestions(false);
+        }
+        if (user) fetchTotalCount();
+    }, [user]);
+
     return (
-        <QuestionsContext.Provider value={{ isLoadingQuestions, questions, setQuestions }}>
+        <QuestionsContext.Provider value={{ isLoadingQuestions, questions, setQuestions, totalQuestionCount }}>
             {children}
         </QuestionsContext.Provider>
     );
