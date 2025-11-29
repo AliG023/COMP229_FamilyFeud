@@ -9,6 +9,15 @@ const getAllQuestions = async (req, res) => {
     }
 };
 
+const getTotalQuestionCount = async (req, res) => {
+    try {
+        const count = await QuestionModel.countDocuments();
+        res.status(200).json(count);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+}
+
 const getQuestionById = async (req, res) => {
     try {
         const question = await QuestionModel.findById(req.params.id);
@@ -120,5 +129,5 @@ const deleteQuestionById = async (req, res) => {
     }
 };
 
-export default { getAllQuestions, getQuestionById, getRandomQuestion, createQuestion, updateQuestion, deleteQuestionById };
+export default { getAllQuestions, getTotalQuestionCount, getQuestionById, getRandomQuestion, createQuestion, updateQuestion, deleteQuestionById };
 export {ROUND_BUCKETS};
