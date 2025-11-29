@@ -52,7 +52,6 @@ export default function CreateSession({ onConfirm, onCancel }) {
         setStatus(defaultStatus);
     }
 
-    const isSubmitting = status.state === 'loading';
     
     return (
         <div className="popup-backdrop" onClick={(e) => e.stopPropagation()}>
