@@ -1,7 +1,7 @@
 import "../styles/Leaderboard.css";
 
 import { useState, useEffect } from "react";
-import { getLeaderboard } from "../utils/leaderboardApi";
+import { getLeaderboard } from "../api/leaderboard.api";
 
 import backgroundImage from "../assets/FF-Leaderboard.png";
 
